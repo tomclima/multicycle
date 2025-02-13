@@ -19,7 +19,7 @@ module cpu(
     wire            EPCWrite;
     wire            IorD;
     wire    [3:0]   PCSource;
-    wire            WriteSrc;
+    wire    [3:0]   WriteSrc;
     wire    [3:0]   Exception;
     
         // alu wires
@@ -248,7 +248,7 @@ module cpu(
     mux_IorD    m_IorD(
         IorD,
         PCout,
-        MemExcpout,       // TODO: MAKE MemExcp multiplexer
+        MemExcpout,       
         IorDout
     );
 
@@ -261,20 +261,19 @@ module cpu(
         PCSourceout
     );
 
-    mux_writereg    m_WriteSrc(
-        WriteSrc,
-        RS,
-        IMMEDIATE,
-        WriteSrcout
-    );
-
     mux_exception   m_exception(
         Exception,
         ALUout,
         MemExcpout
     );
 
-
+    mux_writesrc    m_writesrc(
+        WriteSrc,
+        ALuout,
+        Hiout, // TODO: MAKE HI AND LO REGISTERS
+        Loout, 
+        WriteSrcout
+    );
 
 
 
