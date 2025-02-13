@@ -13,8 +13,10 @@ module cpu(
     wire            MemToReg;
     wire            RegDest,
     wire    [2:0]   ShiftControl;
+    wire            AluSrcA;
+    wire    [3:0]   AluSrcB;
     
-    // alu wires
+        // alu wires
     wire    [2:0]   ALUControl,
     wire            Overflow,
     wire            Negativo,
@@ -50,6 +52,9 @@ module cpu(
     wire    [31:0]      WriteSrcout;
     wire    [31:0]      Byteout;
     wire    [31:0]      Shiftout;
+    wire    [31:0]      ALUsrcAout;
+    wire    [31:0]      AluSrcBout;
+    wire    [31:0]      SignExt;
 
 
 
@@ -108,7 +113,7 @@ module cpu(
         Negativo,
         Zero,
         Igual,
-        Maior,
+        Maior,   
         Menor
     );
 
@@ -166,6 +171,20 @@ module cpu(
         WriteReg
     );
 
+    mux_aluA    m_ALUsrcA(
+        AluSrcA,
+        PCout,
+        Aout,
+        ALUsrcAout
+    );
+
+    mux_aluB    m_ALUsrcB(
+        AluSrcB,
+        Bout,
+        SignExt,        // TODO: ADD SIGN EXT MODULE
+        ShiftL2,        // TODO: MAKE SHift Left 2 module
+        AluSrcBout
+    );
 
 
 
