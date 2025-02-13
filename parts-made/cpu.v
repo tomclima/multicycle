@@ -12,6 +12,7 @@ module cpu(
     wire            RegWrite;
     wire            MemToReg;
     wire            RegDest,
+    wire    [2:0]   ShiftControl;
     
     // alu wires
     wire    [2:0]   ALUControl,
@@ -48,6 +49,7 @@ module cpu(
     wire    [31:0]      PCSrcout;
     wire    [31:0]      WriteSrcout;
     wire    [31:0]      Byteout;
+    wire    [31:0]      Shiftout;
 
 
 
@@ -96,8 +98,7 @@ module cpu(
         ReadData2
     );
 
-    // ALU
-
+    // ALU                  
     Ula32   ALU(
         Aout,       // TODO make register A
         Bout,       //TODO make register B
@@ -110,6 +111,18 @@ module cpu(
         Maior,
         Menor
     );
+
+
+    // Shift Reg
+    RegDesloc   shift_reg(
+        clk,
+        reset,
+        ShiftControl,
+        OFFSET[10:6],
+        Bout,
+        Shiftout
+    );
+
 
     //Registers in cpu
 
