@@ -18,6 +18,7 @@ module cpu(
     wire    [3:0]   AluSrcB;
     wire            EPCWrite;
     wire            IorD;
+    wire    [3:0]   PCSource;
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -27,7 +28,6 @@ module cpu(
     wire            Igual,
     wire            Maior,
     wire            Menor
-
 
 
 
@@ -62,6 +62,7 @@ module cpu(
     wire    [31:0]      EPCout;
     wire    [31:0]      MemExcpout;
     wire    [31:0]      IorDout;
+    wire    [31:0]      PCSourceout;
 
 
 
@@ -215,6 +216,17 @@ module cpu(
         MemExcpout,       // TODO: MAKE MemExcp multiplexer
         IorDout
     );
+
+    mux_pcsource    m_PCSource(
+        PCSource,
+        ALUResult,
+        ALUout,
+        JumpAddress,    // TODO: MAKE shift left 2 and concatenation with pc
+        EPCout,
+        PCSourceout
+    );
+
+    
 
 
 
