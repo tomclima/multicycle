@@ -1,4 +1,4 @@
-module mux_pcsource(
+module mux_ALUB(
     input wire      [3:0]       selector,
     input wire      [31:0]      data_0,
     input wire      [31:0]      data_2,
