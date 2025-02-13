@@ -19,6 +19,7 @@ module cpu(
     wire            EPCWrite;
     wire            IorD;
     wire    [3:0]   PCSource;
+    wire            WriteSrc;
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -71,8 +72,8 @@ module cpu(
         .clk(clk),
         .Reset(reset),
         .Load(PCwrite),
-        .Entrada(PCin), //
-        .Saida(PCout) // TODO: ADD PCSOURCE MUX
+        .Entrada(PCin), // MAKE PCin MUX
+        .Saida(PCout)
     );
 
 
@@ -190,7 +191,7 @@ module cpu(
 
     mux_writedata m_writedata(
         MemToReg,
-        WriteSrcout,  // TODO: MAKE WRITESRCMUX
+        WriteSrcout,  
         Byteout,       // TODO: MAKE BYTE_MUX
         WriteData
     );
@@ -231,6 +232,13 @@ module cpu(
         JumpAddress,    // TODO: MAKE shift left 2 and concatenation with pc
         EPCout,
         PCSourceout
+    );
+
+    mux_writereg    m_WriteSrc(
+        WriteSrc,
+        RS,
+        OFFSET,
+        WriteSrcout
     );
 
 
