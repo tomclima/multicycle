@@ -57,7 +57,7 @@ module cpu(
     wire    [31:0]      Shiftout;
     wire    [31:0]      ALUsrcAout;
     wire    [31:0]      AluSrcBout;
-    wire    [31:0]      SignExt;
+    wire    [31:0]      SignExtout;
     wire    [31:0]      MemRegout;
     wire    [31:0]      EPCout;
     wire    [31:0]      MemExcpout;
@@ -136,6 +136,13 @@ module cpu(
         Shiftout
     );
 
+    // Sign Extend
+
+    sign_ext_16b SignExt(
+        ExtSrcOut, // TODO: MAKE ExtSrc Multiplexer
+        SignExtout
+    );
+
 
     //Registers in cpu
 
@@ -205,7 +212,7 @@ module cpu(
     mux_aluB    m_ALUsrcB(
         AluSrcB,
         Bout,
-        SignExt,        // TODO: ADD SIGN EXT MODULE
+        SignExtout,        
         ShiftL2,        // TODO: MAKE SHift Left 2 module
         AluSrcBout
     );
@@ -226,7 +233,7 @@ module cpu(
         PCSourceout
     );
 
-    
+
 
 
 
