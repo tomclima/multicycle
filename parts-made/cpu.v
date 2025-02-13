@@ -38,7 +38,15 @@ module cpu(
     wire    [5:0]       OPCODE;
     wire    [4:0]       RS;
     wire    [4:0]       RT;
-    wire    [15:0]      OFFSET;
+    wire    [4:0]       RD;
+    wire    [15:0]      IMMEDIATE;
+    wire    [5:0]       SHAMT;
+    wire    [5:0]       FUNCT;
+    wire    [25:0]      OFFSET;
+    assign  RD      = IMMEDIATE[15:11];
+    assign  SHAMT   = IMMEDIATE[10:6];
+    assign  FUNCT   = IMMEDIATE[5:0];
+    assign  OFFSET  = {RS, RT, IMMEDIATE};
 
     wire    [4:0]       WriteReg;
     wire    [31:0]      WriteData;
@@ -53,6 +61,9 @@ module cpu(
     wire    [31:0]      PCout;
     wire    [31:0]      PCin;
     wire    [31:0]      PCSrcout;
+    wire    [3:0]       PCjump;
+    assign  PCjump = PC[31:28];
+
     wire    [31:0]      WriteSrcout;
     wire    [31:0]      Byteout;
     wire    [31:0]      Shiftout;
@@ -64,6 +75,8 @@ module cpu(
     wire    [31:0]      MemExcpout;
     wire    [31:0]      IorDout;
     wire    [31:0]      PCSourceout;
+    wire    [31:0]      JumpShiftLeftout;
+    wire    [31:0]      ShiftLeftout;
 
 
 
@@ -96,7 +109,7 @@ module cpu(
         .Instr31_26(OPCODE),
         .Instr25_21(RS),
         .Instr20_16(RT),
-        .Instr15_0(OFFSET)
+        .Instr15_0(IMMEDIATE)
     ); 
 
     // Register Bank 
@@ -132,7 +145,7 @@ module cpu(
         clk,
         reset,
         ShiftControl,
-        OFFSET[10:6],
+        SHAMT,
         Bout,
         Shiftout
     );
@@ -140,9 +153,22 @@ module cpu(
     // Sign Extend
 
     sign_ext_16b SignExt(
-        OFFSET, 
+        IMMEDIATE, 
         SignExtout
     );
+
+    // Shift lefts
+    jump_Shiftleft2 JumpShiftLeft(
+        OFFSET,
+        PCjump,
+        JumpShiftLeftout
+    );
+
+    shiftleft2      shiftleft(
+        SignExtout,
+        ShiftLeftout
+    );
+
 
 
     //Registers in cpu
@@ -199,7 +225,7 @@ module cpu(
     mux_writereg m_writereg(
         RegDest,
         RT,
-        OFFSET,
+        IMMEDIATE,
         WriteReg
     );
 
@@ -214,7 +240,7 @@ module cpu(
         AluSrcB,
         Bout,
         SignExtout,        
-        ShiftL2,        // TODO: MAKE SHift Left 2 module
+        ShiftLeftout,        
         AluSrcBout
     );
 
@@ -229,7 +255,7 @@ module cpu(
         PCSource,
         ALUResult,
         ALUout,
-        JumpAddress,    // TODO: MAKE shift left 2 and concatenation with pc
+        JumpShiftLeftout,    
         EPCout,
         PCSourceout
     );
@@ -237,7 +263,7 @@ module cpu(
     mux_writereg    m_WriteSrc(
         WriteSrc,
         RS,
-        OFFSET,
+        IMMEDIATE,
         WriteSrcout
     );
 
