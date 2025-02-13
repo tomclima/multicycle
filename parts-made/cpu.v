@@ -140,7 +140,7 @@ module cpu(
     // Sign Extend
 
     sign_ext_16b SignExt(
-        ExtSrcOut, // TODO: MAKE ExtSrc Multiplexer
+        OFFSET, 
         SignExtout
     );
 
