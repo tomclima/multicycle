@@ -8,6 +8,7 @@ module cpu(
 
     wire            PCwrite;
     wire            MemWrite;
+    wire            MemRead;
     wire            IRWrite;
     wire            RegWrite;
     wire            MemToReg;
@@ -15,6 +16,7 @@ module cpu(
     wire    [2:0]   ShiftControl;
     wire            AluSrcA;
     wire    [3:0]   AluSrcB;
+    wire            EPCWrite;
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -44,7 +46,7 @@ module cpu(
 
     wire    [31:0]      ALUResult;
     wire    [31:0]      ALUout;
-    wire    [31:0]      MemtoIR;
+    wire    [31:0]      Memout;
 
     wire    [31:0]      PCout;
     wire    [31:0]      PCin;
@@ -55,6 +57,8 @@ module cpu(
     wire    [31:0]      ALUsrcAout;
     wire    [31:0]      AluSrcBout;
     wire    [31:0]      SignExt;
+    wire    [31:0]      MemRegout;
+    wire    [31:0]      EPCout;
 
 
 
@@ -74,7 +78,7 @@ module cpu(
         .Clock(clk),
         .Wr(MemWrite),
         .Datain(ALUout),
-        .Dataout(MemtoIR)
+        .Dataout(Memout)
     );
 
 
@@ -83,7 +87,7 @@ module cpu(
         .clk(clk);
         .Reset(reset),
         .Load_ir(IRWrite),
-        .Entrada(MemtoIR),
+        .Entrada(Memout),
         .Instr31_26(OPCODE),
         .Instr25_21(RS),
         .Instr20_16(RT),
@@ -105,8 +109,8 @@ module cpu(
 
     // ALU                  
     Ula32   ALU(
-        Aout,       // TODO make register A
-        Bout,       //TODO make register B
+        ALUsrcAout,      
+        AluSrcBout,     
         ALUControl, 
         ALUResult,
         Overflow,
@@ -130,6 +134,14 @@ module cpu(
 
 
     //Registers in cpu
+
+    Registrador MemDataRegister(
+        clk,
+        reset,
+        MemRead,
+        Memout,
+        MemRegout
+    );
 
     Registrador ALU_out(
         clk,
@@ -155,6 +167,14 @@ module cpu(
         Bout
     );
     
+    Registrador EPC(
+        clk,
+        reset,
+        EPCWrite,
+        ALUout,
+        EPCout
+    );
+
     //multiplexers
 
     mux_writedata m_writedata(
