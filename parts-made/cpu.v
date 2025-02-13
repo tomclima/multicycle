@@ -109,7 +109,7 @@ module cpu(
         Igual,
         Maior,
         Menor
-    )
+    );
 
     //Registers in cpu
 
