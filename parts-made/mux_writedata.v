@@ -1,7 +1,7 @@
 module mux_writedata(
-    input   wire            selector,
-    input   wire    [31:0]  data_0,
-    input   wire    [31:0]  data_1,
+    input   wire            MemToReg,
+    input   wire    [31:0]  write_src_mux_out,
+    input   wire    [31:0]  byte_mux_out,
     output  wire    [31:0]  data_out
 );
 
