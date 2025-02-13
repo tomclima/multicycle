@@ -28,7 +28,12 @@ module cpu(
     wire    [4:0]       RS;
     wire    [4:0]       RT;
     wire    [15:0]      OFFSET;
+
     wire    [4:0]       WriteReg;
+    wire    [31:0]      WriteData;
+    wire    [31:0]      ReadData1;
+    wire    [31:0]      ReadData2;
+
 
     wire    [31:0]      alu_result;
     wire    [31:0]      pc_out;
@@ -36,8 +41,6 @@ module cpu(
 
     wire    [31:0]      pc_in;
     wire    [31:0]      pc_src_out;
-
-    wire    [31:0]      WriteData;
 
 
 
@@ -82,8 +85,7 @@ module cpu(
         RegDest,
         RT,
         OFFSET,
-        WriteReg,
-
+        WriteReg
     );
 
     Banco_reg reg_base(
@@ -92,8 +94,10 @@ module cpu(
         RegWrite,
         RS,
         RT,
-
-        
+        WriteReg,
+        WriteData,
+        ReadData1,
+        ReadData2
     );
 
 
