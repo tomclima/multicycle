@@ -17,6 +17,7 @@ module cpu(
     wire            AluSrcA;
     wire    [3:0]   AluSrcB;
     wire            EPCWrite;
+    wire            IorD;
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -59,6 +60,8 @@ module cpu(
     wire    [31:0]      SignExt;
     wire    [31:0]      MemRegout;
     wire    [31:0]      EPCout;
+    wire    [31:0]      MemExcpout;
+    wire    [31:0]      IorDout;
 
 
 
@@ -74,7 +77,7 @@ module cpu(
 
     // memory
     Memoria mem_(
-        .Address(PCout),
+        .Address(IorDout),
         .Clock(clk),
         .Wr(MemWrite),
         .Datain(ALUout),
@@ -206,6 +209,12 @@ module cpu(
         AluSrcBout
     );
 
+    mux_IorD    m_IorD(
+        IorD,
+        PCout,
+        MemExcpout,       // TODO: MAKE MemExcp multiplexer
+        IorDout
+    );
 
 
 
