@@ -42,6 +42,7 @@ module cpu(
 
 
 
+    // PC
     Registrador PC_(
         .clk(clk),
         .Reset(reset),
@@ -51,15 +52,7 @@ module cpu(
     );
 
 
-
-    Registrador ALU_out(
-        clk,
-        reset,
-        1,
-        ALUResult,
-        ALUout
-    );
-
+    // memory
     Memoria mem_(
         .Address(PCout),
         .Clock(clk),
@@ -67,6 +60,7 @@ module cpu(
         .Datain(ALUout),
         .Dataout(MemtoIR)
     );
+
 
     // instruction register
     Instr_Reg ir_(
@@ -79,6 +73,32 @@ module cpu(
         .Instr20_16(RT),
         .Instr15_0(OFFSET)
     ); 
+
+    // Register Bank 
+    Banco_reg reg_base(
+        clk,
+        reset,
+        RegWrite,
+        RS,
+        RT,
+        WriteReg,
+        WriteData,
+        ReadData1,
+        ReadData2
+    );
+
+    //Registers in cpu
+
+    Registrador ALU_out(
+        clk,
+        reset,
+        1,
+        ALUResult,
+        ALUout
+    );
+
+
+    //multiplexers
 
     mux_writedata m_writedata(
         MemToReg,
@@ -94,17 +114,6 @@ module cpu(
         WriteReg
     );
 
-    Banco_reg reg_base(
-        clk,
-        reset,
-        RegWrite,
-        RS,
-        RT,
-        WriteReg,
-        WriteData,
-        ReadData1,
-        ReadData2
-    );
 
 
 
