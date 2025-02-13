@@ -137,10 +137,6 @@ module cpu(
         Bout
     );
     
-
-    
-
-
     //multiplexers
 
     mux_writedata m_writedata(
