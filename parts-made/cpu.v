@@ -6,17 +6,12 @@ module cpu(
 
     //control wires
 
-    wire            pc_w;
-    wire            mem_w;
-    wire            ir_w;
-    wire            m_wreg;
+    wire            PCwrite;
+    wire            MemWrite;
+    wire            IRWrite;
     wire            RegWrite;
-    wire    [4:0]   PCsource;
-    wire            over_mult;
-    wire            over_sum;
-    wire            not_a_instruction;
-    wire            exception;
     wire            MemToReg;
+    wire            RegDest,
 
 
 
@@ -35,31 +30,42 @@ module cpu(
     wire    [31:0]      ReadData2;
 
 
-    wire    [31:0]      alu_result;
-    wire    [31:0]      pc_out;
-    wire    [31:0]      mem_to_ir;
+    wire    [31:0]      ALUResult;
+    wire    [31:0]      ALUout;
+    wire    [31:0]      MemtoIR;
 
-    wire    [31:0]      pc_in;
-    wire    [31:0]      pc_src_out;
+    wire    [31:0]      PCout;
+    wire    [31:0]      PCin;
+    wire    [31:0]      PCSrcout;
+    wire    [31:0]      WriteSrcout;
+    wire    [31:0]      Byteout;
 
 
 
     Registrador PC_(
         .clk(clk),
         .Reset(reset),
-        .Load(pc_w),
-        .Entrada(pc_in),
-        .Saida(pc_out)
+        .Load(PCwrite),
+        .Entrada(PCin), //
+        .Saida(PCout) // TODO: ADD PCSOURCE MUX
     );
 
-    Registrador ALU_out();
+
+
+    Registrador ALU_out(
+        clk,
+        reset,
+        1,
+        ALUResult,
+        ALUout
+    );
 
     Memoria mem_(
-        .Address(PC_out),
+        .Address(PCout),
         .Clock(clk),
         .Wr(MemWrite),
-        .Datain(alu_out),
-        .Dataout(mem_to_ir)
+        .Datain(ALUout),
+        .Dataout(MemtoIR)
     );
 
     // instruction register
@@ -67,7 +73,7 @@ module cpu(
         .clk(clk);
         .Reset(reset),
         .Load_ir(IRWrite),
-        .Entrada(mem_to_ir),
+        .Entrada(MemtoIR),
         .Instr31_26(OPCODE),
         .Instr25_21(RS),
         .Instr20_16(RT),
@@ -76,8 +82,8 @@ module cpu(
 
     mux_writedata m_writedata(
         MemToReg,
-        write_src_mux_out,  // TODO: MAKE WRITESRCMUX
-        byte_mux_out,       // TODO: MAKE BYTE_MUX
+        WriteSrcout,  // TODO: MAKE WRITESRCMUX
+        Byteout,       // TODO: MAKE BYTE_MUX
         WriteData
     );
 
