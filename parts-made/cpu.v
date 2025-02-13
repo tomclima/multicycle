@@ -12,6 +12,15 @@ module cpu(
     wire            RegWrite;
     wire            MemToReg;
     wire            RegDest,
+    
+    // alu wires
+    wire    [2:0]   ALUControl,
+    wire            Overflow,
+    wire            Negativo,
+    wire            Zero,
+    wire            Igual,
+    wire            Maior,
+    wire            Menor
 
 
 
@@ -86,6 +95,21 @@ module cpu(
         ReadData1,
         ReadData2
     );
+
+    // ALU
+
+    Ula32   ALU(
+        Aout,       // TODO make register A
+        Bout,       //TODO make register B
+        ALUControl, 
+        ALUResult,
+        Overflow,
+        Negativo,
+        Zero,
+        Igual,
+        Maior,
+        Menor
+    )
 
     //Registers in cpu
 
