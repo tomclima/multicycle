@@ -10,12 +10,13 @@ module cpu(
     wire            mem_w;
     wire            ir_w;
     wire            m_wreg;
-    wire            regwrite;
+    wire            RegWrite;
     wire    [4:0]   PCsource;
     wire            over_mult;
     wire            over_sum;
     wire            not_a_instruction;
     wire            exception;
+    wire            MemToReg;
 
 
 
@@ -27,7 +28,7 @@ module cpu(
     wire    [4:0]       RS;
     wire    [4:0]       RT;
     wire    [15:0]      OFFSET;
-    wire    [4:0]       writereg_in;
+    wire    [4:0]       WriteReg;
 
     wire    [31:0]      alu_result;
     wire    [31:0]      pc_out;
@@ -35,6 +36,8 @@ module cpu(
 
     wire    [31:0]      pc_in;
     wire    [31:0]      pc_src_out;
+
+    wire    [31:0]      WriteData;
 
 
 
@@ -46,7 +49,7 @@ module cpu(
         .Saida(pc_out)
     );
 
-    Registrador ALU_out()
+    Registrador ALU_out();
 
     Memoria mem_(
         .Address(PC_out),
@@ -56,6 +59,7 @@ module cpu(
         .Dataout(mem_to_ir)
     );
 
+    // instruction register
     Instr_Reg ir_(
         .clk(clk);
         .Reset(reset),
@@ -65,13 +69,21 @@ module cpu(
         .Instr25_21(RS),
         .Instr20_16(RT),
         .Instr15_0(OFFSET)
+    ); 
+
+    mux_writedata m_writedata(
+        MemToReg,
+        write_src_mux_out,  // TODO: MAKE WRITESRCMUX
+        byte_mux_out,       // TODO: MAKE BYTE_MUX
+        WriteData
     );
 
     mux_writereg m_writereg(
         RegDest,
         RT,
         OFFSET,
-        writereg_in,
+        WriteReg,
+
     );
 
     Banco_reg reg_base(
@@ -79,7 +91,8 @@ module cpu(
         reset,
         RegWrite,
         RS,
-        RT
+        RT,
+
         
     );
 
