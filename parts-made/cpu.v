@@ -121,6 +121,25 @@ module cpu(
         ALUout
     );
 
+    Registrador A(
+        clk,
+        reset,
+        1,
+        ReadData1,
+        Aout
+    );
+
+    Registrador B(
+        clk,
+        reset,
+        1,
+        ReadData2,
+        Bout
+    );
+    
+
+    
+
 
     //multiplexers
 
