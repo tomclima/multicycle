@@ -20,6 +20,7 @@ module cpu(
     wire            IorD;
     wire    [3:0]   PCSource;
     wire            WriteSrc;
+    wire    [3:0]   Exception;
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -267,7 +268,11 @@ module cpu(
         WriteSrcout
     );
 
-
+    mux_exception   m_exception(
+        Exception,
+        ALUout,
+        MemExcpout
+    );
 
 
 

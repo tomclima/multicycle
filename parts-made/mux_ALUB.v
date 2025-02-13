@@ -7,7 +7,7 @@ module mux_aluB(
 );
 
 assign data_out = (selector == 4'b0000) ? Bout : 
-                  (selector == 4'b0001) ? 4 : 
+                  (selector == 4'b0001) ? 32'd4 : 
                   (selector == 4'b0010) ? SignExt : 
                   (selector == 4'b0011) ? Shift2 : 32'b0;  // Default case
 
