@@ -25,7 +25,8 @@ module cpu(
     wire            HIWrite;
     wire            LOWrite;
     wire            DivMult;
-    wire            ByZero;            
+    wire            ByZero;   
+    wire            MultOverflow;         
     
         // alu wires
     wire    [2:0]   ALUControl;
@@ -188,11 +189,20 @@ module cpu(
     Div Div(
         AluSrcA,
         AluSrcB,
-        DivHI,
-        DIvLO,
+        DivHIout,
+        DIvLOout,
         ByZero
     );
 
+    // Multiplicador
+
+    Mult Mult(
+        AluSrcA,
+        AluSrcB,
+        MultOverflow,
+        MultHIout,
+        MultLOout
+    );
 
     //Registers in cpu
 
