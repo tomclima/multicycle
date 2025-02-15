@@ -84,7 +84,12 @@ module cpu(
     wire    [31:0]      JumpShiftLeftout;
     wire    [31:0]      ShiftLeftout;
     wire    [31:0]      HIout;
-    wire    [31:0]      DivMultout;
+    wire    [31:0]      DivMultHIout;
+    wire    [31:0]      DivMultLOout;
+    wire    [31:0]      DivHIout;
+    wire    [31:0]      MultHIout;
+    wire    [31:0]      DivLOout;
+    wire    [31:0]      MultLOout;
 
 
 
@@ -226,7 +231,7 @@ module cpu(
         clk,
         reset,
         HIWrite,
-        DivMultHIout, // MAKE DIVMULTHI MUX
+        DivMultHIout, 
         HIout
     );
 
@@ -234,7 +239,7 @@ module cpu(
         clk,
         reset,
         LOWrite
-        DivMultLOout, // MAKE DIVMULTLO MUX
+        DivMultLOout, 
         LOout;
 
     )
@@ -305,6 +310,20 @@ module cpu(
         PCSourceout,
         EPCout,
         PCin
+    );
+
+    mux_DivMultHI m_DivMultHI(
+        DivMult,
+        DivHIout,
+        MultHIout,
+        DivMultHIout
+    );
+
+    mux_DivMultLO m_DivMultLO(
+        DivMult,
+        DivLOout,
+        MultLOout,
+        DivMultLOout
     );
 
 
