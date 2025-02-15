@@ -258,7 +258,7 @@ module cpu(
     mux_writedata m_writedata(
         MemToReg,
         WriteSrcout,  
-        Byteout,       // TODO: MAKE BYTE_MUX
+        MemRegout,       // semi desisti do byte
         WriteData
     );
 
