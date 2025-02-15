@@ -21,7 +21,11 @@ module cpu(
     wire    [3:0]   PCSource;
     wire    [3:0]   WriteSrc;
     wire    [3:0]   Exception;
-    wire            ExceptionOcurred
+    wire            ExceptionOcurred;
+    wire            HIWrite;
+    wire            LOWrite;
+    wire            DivMult;
+    wire            
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -79,6 +83,9 @@ module cpu(
     wire    [31:0]      PCSourceout;
     wire    [31:0]      JumpShiftLeftout;
     wire    [31:0]      ShiftLeftout;
+    wire    [31:0]      HIout;
+    wire    [31:0]      DivMultout;
+
 
 
 
@@ -215,6 +222,23 @@ module cpu(
         EPCout
     );
 
+    Registrador HI(
+        clk,
+        reset,
+        HIWrite,
+        DivMultHIout, // MAKE DIVMULTHI MUX
+        HIout
+    );
+
+    Registrador LO(
+        clk,
+        reset,
+        LOWrite
+        DivMultLOout, // MAKE DIVMULTLO MUX
+        LOout;
+
+    )
+
     //multiplexers
 
     mux_writedata m_writedata(
@@ -271,8 +295,8 @@ module cpu(
     mux_writesrc    m_writesrc(
         WriteSrc,
         ALuout,
-        Hiout, // TODO: MAKE HI AND LO REGISTERS
-        Loout, 
+        HIout, 
+        LOout, 
         WriteSrcout
     );
 
