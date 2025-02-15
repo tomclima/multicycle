@@ -24,8 +24,7 @@ module cpu(
     wire            ExceptionOcurred;
     wire            HIWrite;
     wire            LOWrite;
-    wire            DivMult;
-    wire            
+    wire            DivMult;            
     
         // alu wires
     wire    [2:0]   ALUControl,
