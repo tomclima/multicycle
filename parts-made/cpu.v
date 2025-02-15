@@ -12,31 +12,33 @@ module cpu(
     wire            IRWrite;
     wire            RegWrite;
     wire            MemToReg;
-    wire            RegDest,
-    wire    [2:0]   ShiftControl;
+    wire            RegDest;
     wire            AluSrcA;
-    wire    [3:0]   AluSrcB;
     wire            EPCWrite;
     wire            IorD;
-    wire    [3:0]   PCSource;
-    wire    [3:0]   WriteSrc;
-    wire    [3:0]   Exception;
-    wire            ExceptionOcurred;
     wire            HIWrite;
     wire            LOWrite;
     wire            DivMult;
-    wire            ByZero;   
     wire            MultOverflow;         
+    wire            ByZero;   
+    wire    [3:0]   WriteSrc;
+    wire    [3:0]   PCSource;
+    wire    [3:0]   AluSrcB;
+    wire    [3:0]   Exception;
+    wire    [2:0]   ShiftControl;
+    wire            ABWrite;
+    wire            ALUoutWrite;
     
         // alu wires
     wire    [2:0]   ALUControl;
-    wire            Overflow;
-    wire            Negativo;
+    wire            ALUoverflow;
+    wire            Negative;
     wire            Zero;
-    wire            Igual;
-    wire            Maior;
-    wire            Menor;
+    wire            Equal;
+    wire            Greater;
+    wire            Less;
 
+    wire            ExceptionOcurred; // todo: exception logic
 
 
 
@@ -146,12 +148,12 @@ module cpu(
         AluSrcBout,     
         ALUControl, 
         ALUResult,
-        Overflow,
-        Negativo,
+        ALUoverflow,
+        Negative,
         Zero,
-        Igual,
-        Maior,   
-        Menor
+        Equal,
+        Greater,   
+        Less
     );
 
 
@@ -217,7 +219,7 @@ module cpu(
     Registrador ALU_out(
         clk,
         reset,
-        1,
+        ALUoutWrite,
         ALUResult,
         ALUout
     );
