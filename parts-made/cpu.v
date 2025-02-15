@@ -21,6 +21,7 @@ module cpu(
     wire    [3:0]   PCSource;
     wire    [3:0]   WriteSrc;
     wire    [3:0]   Exception;
+    wire            ExceptionOcurred
     
         // alu wires
     wire    [2:0]   ALUControl,
@@ -275,6 +276,12 @@ module cpu(
         WriteSrcout
     );
 
+    mux_pcerror m_pcexception(
+        ExceptionOcurred,
+        PCSourceout,
+        EPCout,
+        PCin
+    );
 
 
 endmodule
