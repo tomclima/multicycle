@@ -24,16 +24,17 @@ module cpu(
     wire            ExceptionOcurred;
     wire            HIWrite;
     wire            LOWrite;
-    wire            DivMult;            
+    wire            DivMult;
+    wire            ByZero;            
     
         // alu wires
-    wire    [2:0]   ALUControl,
-    wire            Overflow,
-    wire            Negativo,
-    wire            Zero,
-    wire            Igual,
-    wire            Maior,
-    wire            Menor
+    wire    [2:0]   ALUControl;
+    wire            Overflow;
+    wire            Negativo;
+    wire            Zero;
+    wire            Igual;
+    wire            Maior;
+    wire            Menor;
 
 
 
@@ -182,6 +183,15 @@ module cpu(
         ShiftLeftout
     );
 
+    // Divisor
+
+    Div Div(
+        AluSrcA,
+        AluSrcB,
+        DivHI,
+        DIvLO,
+        ByZero
+    );
 
 
     //Registers in cpu
