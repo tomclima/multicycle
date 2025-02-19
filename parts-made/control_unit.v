@@ -153,106 +153,250 @@ module control_unit(
 
     end
 
-    always @(STATE) begin
-    MemWrite = 1'b0;
-    PCwrite = 1'b0;
-    MemRead = 1'b0;
-    IRWrite = 1'b0;
-    RegWrite = 1'b0;
-    MemToReg = 1'b0;
-    RegDest = 1'b0;
-    AluSRCA = 1'b0;
-    EPCWrite = 1'b0;
-    IorD = 1'b0;
-    HIWrite = 1'b0;
-    LOWrite = 1'b0;
-    DivMult = 1'b0;
-    ABWrite = 1'b0;
-    ALUoutWrite = 1'b0;
-    WriteSrc = 4'b0000;
-    PCSource = 4'b0000;
-    ALUSrcB = 4'b0000;
-    Exception = 4'b0000;
-    ShiftControl = 3'b000;
-    ALUControl   = 3'b001;
-    
-
-    if(reset == 1'b1) begin
-        if(STATE != RESET) begin
-            STATE = RESET;
-                MemWrite = 1'b0;
-                PCwrite = 1'b0;
-                MemRead = 1'b0;
-                IRWrite = 1'b0;
-                RegWrite = 1'b0;
-                MemToReg = 1'b0;
-                RegDest = 1'b0;
-                AluSRCA = 1'b0;
-                EPCWrite = 1'b0;
-                IorD = 1'b0;
-                HIWrite = 1'b0;
-                LOWrite = 1'b0;
-                DivMult = 1'b0;
-                ABWrite = 1'b0;
-                ALUoutWrite = 1'b0;
-                WriteSrc = 4'b0000;
-                PCSource = 4'b0000;
-                ALUSrcB = 4'b0000;
-                Exception = 4'b0000;
-                ShiftControl = 3'b000;
-                ALUControl   = 3'b001;
-
-                rst_out = 1'b1;
-                COUNTER = 3'b000;
+always @(posedge clk, reset) begin
+        if( reset == 1'b1 ) 
+        begin
+            estado = 0; 
+            tempo = 0;
         end
-        else begin
-                STATE = READINST;
-
-            end 
+        else
+        begin
+            // TRANSIÇÃO ENTRE OS ESTADOS
+            if( estado == RESET )
+            begin
+                if(tempo == 0) tempo = 2;  //para esperar um ciclo ainda no reset, para gravar na memória
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+            end
+            else if(overflowflag)          estado = OVERFLOW;
+            else if(estado == READINST1) //estado = READINST2;
+            begin 
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0)  estado = READINST2;
+            end
+            else if(estado == READINST2)   estado = DECODEINST;
+            else if(estado == DECODEINST)
+            begin
+                //INSTRUÇÕES R
+                if(opcode == 6'b000000)
+                begin
+                         if(funct == 6'b010000) estado = MFHI;    //mfhi  0x10
+                    else if(funct == 6'b010010) estado = MFLO;    //mflo  0x12
+                    else if(funct == 6'b001101) estado = BREAK;   //break 0xd
+                    else if(funct == 6'b010011) estado = RTE;     //rte   0x13
+                    else if(funct == 6'b000101) estado = LOADA;   //xchg  0x5
+                    else if(funct == 6'b101010) estado = SLT;     //slt   0x2a
+                    else if(funct == 6'b100010) estado = SUB;     //sub   0x22
+                    else if(funct == 6'b100000) estado = ADD;     //add   0x20
+                    else if(funct == 6'b100100) estado = AND;     //and   0x24
+                    else if(funct == 6'b100101) estado = OR;      //or    0x25
+                    else if(funct == 6'b011010) estado = DIV;     //div   0x1a
+                    else if(funct == 6'b011000) estado = MULT;    //mul   0x18
+                    else if(funct == 6'b001000) estado = JR;      //JR    0x8
+                    else if(funct == 6'b000100) estado = LOADSHFTV;//SLLV  0x4
+                    else if(funct == 6'b000111) estado = LOADSHFTV;//SRAV  0x7
+                    else if(funct == 6'b000011) estado = LOADSHFT;//SRA   0x3
+                    else if(funct == 6'b000010) estado = LOADSHFT;//SRL   0x2
+                    else if(funct == 6'b000000) estado = LOADSHFT;//SLL   0x0
+                    else estado = INVALIDOP;
+                end
+                // INSTRUÇÕES I
+                else if(opcode == 6'b001000) estado = ADDI;     //ADDI  0x8
+                else if(opcode == 6'b001001) estado = ADDIU;    //ADDIU 0x9
+                else if(opcode == 6'b001010) estado = SLTI;     //SLTI  0xa
+                else if(opcode == 6'b000001) estado = DIVM;     //DIVM  0x1
+                else if(opcode == 6'b001111) estado = LOADSLUI; //LUI   0xf
+                else if(opcode == 6'b000100) estado = BRNCHCALC;//BEQ   0x4
+                else if(opcode == 6'b000101) estado = BRNCHCALC;//BNE   0x5
+                else if(opcode == 6'b000110) estado = BRNCHCALC;//BLE   0x6
+                else if(opcode == 6'b000111) estado = BRNCHCALC;//BGT   0x7
+                else if(opcode == 6'b100011) estado = MEMOCALC; //LW    0x23
+                else if(opcode == 6'b100001) estado = MEMOCALC; //LH    0x21
+                else if(opcode == 6'b100000) estado = MEMOCALC; //LB    0x20
+                else if(opcode == 6'b101011) estado = MEMOCALC; //SW    0x2b
+                else if(opcode == 6'b101001) estado = MEMOCALC; //SH    0x29
+                else if(opcode == 6'b101000) estado = MEMOCALC; //SB    0x28
+                // INSTRUÇÕES J
+                else if(opcode == 6'b000010) estado = JUMP;     //J     0x2
+                else if(opcode == 6'b000011) estado = JAL;      //JAL   0x3
+                else estado = INVALIDOP;
+            end
+            // INSTRUÇÕES R - TRANSIÇÕES
+            else if(estado == SLT)     estado = SAVEREGRD;//SAVELT;
+            else if(estado == SUB)     estado = SAVEREGRD;//SAVEALU;
+            else if(estado == ADD)     estado = SAVEREGRD;//SAVEALU;
+            else if(estado == AND)     estado = SAVEREGRD;//SAVEALU;
+            else if(estado == OR)      estado = SAVEREGRD;//SAVEOR;
+            else if(estado == JR)      estado = SAVEPC;
+            else if(estado == SAVEPC)  estado = READINST1;
+            else if(estado == SAVEPCBK)estado = READINST1;
+            else if(estado == LOADSHFT)
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0)
+                begin
+                         if(funct == 6'b000011) estado = SRA;   //SRA   0x3
+                    else if(funct == 6'b000010) estado = SRL;   //SRL   0x2
+                    else if(funct == 6'b000000) estado = SLL;   //SLL   0x0
+                    else estado = INVALIDOP;
+                end
+            end
+            else if(estado == LOADSHFTV)
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0)
+                begin
+                         if(funct == 6'b000100) estado = SLLV;  //SLLV  0x4
+                    else if(funct == 6'b000111) estado = SRAV;  //SRAV  0x7
+                    else estado = INVALIDOP;
+                end
+            end
+            else if(estado == SLLV || estado == SRAV || estado == SRA || estado == SRL || estado == SLL) //todos os shift tipo R
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = SAVEREGRD;
+            end
+            else if(estado == MFHI)    estado = SAVEREGRD;
+            else if(estado == MFLO)    estado = SAVEREGRD;
+            else if(estado == SAVEREGRD)estado= READINST1;
+            else if(estado == BREAK)   estado = SAVEPCBK;
+            else if(estado == RTE)     estado = READINST1;
+            else if(estado == DIV || estado == MULT)
+            begin
+                if(tempo == 0) tempo = 34; //espera 32 ciclos para completar a divisão/multiplicação
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+                if(divby0flag)begin tempo = 0; estado = DIVBY0; end
+            end
+            else if(estado == LOADA)   //xchg load a
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = LOADB;
+            end
+            else if(estado == LOADB)  //xchg load b
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = ATOB;
+            end
+            else if(estado == ATOB)    estado = BTOA;
+            else if(estado == BTOA)    estado = READINST1;
+            // INSTRUÇÕES I - TRANSIÇÕES
+            else if(estado == ADDI)    estado = SAVEREGRT;
+            else if(estado == ADDIU)   estado = SAVEREGRT;
+            else if(estado == SLTI)    estado = SAVEREGRT;
+            else if(estado == LOADSLUI)
+            begin
+                 if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = LUI;
+            end
+            else if(estado == LUI)     //estado = SAVEREGRT;
+            begin
+                 if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = SAVEREGRT;
+            end
+            else if(estado == SAVEREGRT)estado= READINST1;
+            else if(estado == DIVM)
+            begin 
+                if(tempo == 0) tempo = 34;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+                if(divby0flag)begin tempo = 0; estado = DIVBY0; end
+            end
+            else if(estado == BRNCHCALC)
+            begin
+                     if(opcode == 6'b000100) estado = BEQ;//BEQ   0x4
+                else if(opcode == 6'b000101) estado = BNE;//BNE   0x5
+                else if(opcode == 6'b000110) estado = BLE;//BLE   0x6
+                else if(opcode == 6'b000111) estado = BGT;//BGT   0x7
+            end
+            else if(estado == BEQ)        estado = CONDSAVEPC;
+            else if(estado == BNE)        estado = CONDSAVEPC;
+            else if(estado == BLE)        estado = CONDSAVEPC;
+            else if(estado == BGT)        estado = CONDSAVEPC;
+            else if(estado == CONDSAVEPC) estado = READINST1;
+            else if(estado == MEMOCALC)
+            begin
+                if(opcode ==  6'b101011) estado = SW;  // SW 0x2b
+                else estado = READMEM;  // SH/SB/LW/LH/LB
+            end
+            else if(estado == READMEM) 
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0)
+                begin
+                         if(opcode == 6'b100011) estado = LW;  //LW    0x23
+                    else if(opcode == 6'b100001) estado = LH;  //LH    0x21
+                    else if(opcode == 6'b100000) estado = LB;  //LB    0x20
+                    else if(opcode == 6'b101001) estado = SH;  //SH    0x29
+                    else if(opcode == 6'b101000) estado = SB;  //SB    0x28
+                end
+            end
+            else if(estado == LW)
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+            end
+            else if(estado == LH)// estado = READINST1;
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+            end
+            else if(estado == LB)// estado = READINST1;
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+            end
+            else if(estado == SW) estado = READINST1;
+            else if(estado == SH) estado = READINST1;
+            else if(estado == SB) estado = READINST1;
+            else if(estado == LB) estado = READINST1;
+            // INSTRUÇÕES J - TRANSIÇÃO
+            else if(estado == JUMP) estado = READINST1;
+            else if(estado == JAL)  //estado = READINST1;
+            begin
+                if(tempo == 0) tempo = 1;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+            end
+            // TRATAMENTOS DE ERROS
+            else if(estado == EXEPTION) // estado = READINST1;
+            begin
+                if(tempo == 0) tempo = 2;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = READINST1;
+            end
+            else if(estado == INVALIDOP) // estado = EXEPTION;
+            begin
+                if(tempo == 0) tempo = 6;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = EXEPTION;
+            end
+            else if(estado == DIVBY0)   // estado = EXEPTION;
+            begin
+                if(tempo == 0) tempo = 6;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = EXEPTION;
+            end
+            else if(estado == OVERFLOW)
+            begin
+                if(tempo == 0) tempo = 6;
+                tempo = tempo - 1;
+                if(tempo == 0) estado = EXEPTION;
+            end
         end
-        else begin
-            case (STATE)
-                READINST : begin
-
-                end
-            
-                PC_INC: begin
-                STATE = DECODE;
-
-
-                case (OPCODE)
-                    R_OPCODE: begin
-                        STATE = READ_REGBANK;
-                    end
-                    default : STATE = INVALIDOP;
-                endcase
-                    
-                end
-                READ_REGBANK : begin
-
-
-                case (FUNCT)
-                    ADD_FUNCT: begin
-                        
-                    end
-                    default: 
-                endcase
-                end
-                COMMON : begin
-                    
-                end
-                COMMON : begin
-                    
-                end
-                COMMON : begin
-                    
-                end
-                default: 
-            endcase
-        end
-
     end
-
     
 
 endmodule
