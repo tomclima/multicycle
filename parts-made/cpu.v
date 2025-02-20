@@ -42,7 +42,7 @@ module cpu(
 
     assign ABWrite = 1'b1;
     assign ALUoutWrite = ABWrite;
-
+    assign MemByte = MemRegout[7:0];
 
 
     // data wires
@@ -68,6 +68,8 @@ module cpu(
     wire    [31:0]      ALUResult;
     wire    [31:0]      ALUout;
     wire    [31:0]      Memout;
+    wire    [7:0]       MemByte;
+    wire    [31:0]      MemExtOut;
 
     wire    [31:0]      PCout;
     wire    [31:0]      PCin;
@@ -171,9 +173,14 @@ module cpu(
 
     // Sign Extend
 
-    sign_ext_16b SignExt(
+    sign_ext_16b SignExt16(
         IMMEDIATE, 
         SignExtout
+    );
+
+    sign_ext_24b SignExt24(
+        MemByte,
+        MemExtOut
     );
 
     // Shift lefts
@@ -272,7 +279,8 @@ module cpu(
     mux_writedata m_writedata(
         MemToReg,
         WriteSrcout,  
-        MemRegout,       // semi desisti do byte
+        MemRegout,       
+        MemExtOut,
         WriteData
     );
 

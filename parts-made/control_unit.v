@@ -19,11 +19,10 @@ module control_unit(
 
     output reg                  MemWrite,
     output reg                  PCwrite,
-    output reg                  
     output reg                  MemRead,
     output reg                  IRWrite,
     output reg                  RegWrite,
-    output reg                  MemToReg,
+    output reg      [2:0]       MemToReg,
     output reg                  RegDest,
     output reg                  ALUSrcA,
     output reg                  EPCWrite,
@@ -31,8 +30,9 @@ module control_unit(
     output reg                  HIWrite,
     output reg                  LOWrite,
     output reg                  DivMult,
-    output reg                  ABWrite,
+    
     output reg                  ALUoutWrite,
+    output reg                  ExceptionOcurred
 
     // CONTROL VECTORS
 
@@ -421,55 +421,29 @@ always @(posedge clk, reset) begin
 
         always @(estado) begin
 
-        // RESETA TUDO POR PADRÃO //
-        ALUSrcB = 3'd0;
-        ALUSrcA = 2'd0;
-        PCWrite = 1'b0;
-        IorD = 1'b0;
-        if(tempo == 0) Exception = 3'b000;
-        MemWrite = 1'b0; 
-        MemToReg = 3'b000;
+        MemWrite = 1'b0;
+        PCwrite = 1'b0;
+        MemRead = 1'b0;
         IRWrite = 1'b0;
-
-        // SaveTemp = 1'b0;
-        // SizeHandler = 3'b000;
-        DataSource = 1'b0;
-        EPCWrite = 1'b0;
-        RegDest = 2'b00;
         RegWrite = 1'b0;
-        ALUSrcA = 2'd0;
-        ALUSrcB = 3'b000;
-        if(tempo != 1) begin
-            ALUControl      = 3'b000;
-            ShiftControl    = 3'b000;
-        end
-        PCSource = 3'd2;
-        SLLSourceA = 2'b00;
-        SLLSourceB = 2'b00;
-        ShiftType = 3'b000;
+        RegDest = 1'b0;
+        ALUSrcA = 1'b0;
+        EPCWrite = 1'b0;
+        IorD = 1'b0;
+        HIWrite = 1'b0;
+        LOWrite = 1'b0;
+        DivMult = 1'b0;
+        
+        ALUoutWrite = 1'b0;
+        ExceptionOcurred = 1'b0;
 
-
-        ALUSrcA = 1'b0; // same
-        ALUSrcB = 3'b000; // same
-        MemWrite = 1'b0; // 
-        PCwrite, // 
-        MemRead, // hold
-        IRWrite,// 
-        RegWrite,
-        MemToReg,
-        RegDest,
-        EPCWrite,
-        IorD,
-        HIWrite,
-        LOWrite,
-        DivMult,
-
-        WriteSrc,
-        PCSource,
-        Exception,
-        ALUControl;
-        ShiftControl;
-        ///////////////////////////
+        MemToReg = 3'b000;
+        WriteSrc = 3'b0;
+        PCSource = 3'b0;
+        ALUSrcB = 3'b0;
+        Exception = 3'b0;
+        ShiftControl = 2'b0;
+        ALUControl = 2'b0;
 
 
         if(estado == RESET)
@@ -482,70 +456,79 @@ always @(posedge clk, reset) begin
         begin
             
             IorD    = 1'b0;    // seleciona o endereço do pc p/ o mux
-            SrcAddr = 3'b000;  // seleciona o endereço do pc p/ a memo
-            // MemRead = 1'b1; // memória lê automaticamente
+            // Exception = 3'b000;
+            MemRead = 1'b1; // memória lê automaticamente
         end
         else if(estado == READINST2)
         begin
-            ALUSrcA = 2'd0;   // seleciona o PC para operação na ULA como A
-            ALUSrcB = 3'b001; // seleciona o 4  para operação na ULA como B
-            ALUControl = ALUADD; // soma com overflow
-            IRWrite = 1'b1; // carrega a instrução !!! cuidado !!!
+            ALUSrcA = 2'd0;   
+            ALUSrcB = 3'b001; 
+            ALUControl = ALUADD;
+            PCWrite = 1'b1;
+            PCSource = 3'b000;
+            PCin    = 1'b0; 
         end
         else if(estado == DECODEINST)
         begin
-            PCWrite = 1'b1; // !!! Adicionado !!!
+            IRWrite = 1'b1; 
+            // PCWrite = 1'b1; // !!! Adicionado !!!
             // IRWrite = 1'b1; // !!! cuidado !!!
         end
         // INSTRUÇÕES R
         else if(estado == SLT)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = = 1'b1;
             ALUSrcB  = 3'b000;
             ALUControl = ALUCMP;  // S = X comp Y
         end
         else if(estado == SUB)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 1'b1;
             ALUSrcB  = 3'b000;
             ALUControl = ALUSUB; // S = X - Y
         end
         else if(estado == ADD)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 1'b1;
             ALUSrcB = 3'b000;
             ALUControl = ALUADD; // soma COM OVERFLOW
         end
         else if(estado == AND)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 1'b1;
             ALUSrcB  = 3'b000;
             ALUControl = ALUAND;
         end
-        else if(estado == OR)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b000;
-            ALUControl = ALUOR;
-        end
+        // else if(estado == OR)
+        // begin
+        //     ALUSrcA = 1'b1;
+        //     ALUSrcB = 3'b000;
+        //     ALUControl = ALUOR;
+        // end
         else if(estado == DIV)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 1'b1;
             ALUSrcB  = 3'b000;
-            ALUControl = ALUDIV;
+            DivMult = 1'b0;
+            HIWrite = 1'b1;
+            LOWrite = 1'b1;
+
         end
         else if(estado == MULT)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 1'b1;
             ALUSrcB  = 3'b000;
-            ALUControl = ALUMUL;
+            DivMult = 1'b1;
+            HIWrite = 1'b1;
+            LOWrite = 1'b1;
         end
         else if(estado == JR)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 1'b1;
             ALUSrcB  = 3'b000;
             ALUControl = ALULOAD;
             PCSource = 3'b001;
+            PCin = 1'b0;
             PCWrite = 1'b1;
         end
         else if(estado == SAVEPC)
@@ -560,164 +543,176 @@ always @(posedge clk, reset) begin
         end
         else if(estado == LOADSHFT)
         begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b10; //Entrada A é o B !!!
-            SLLSourceB = 2'b10; //Entrada B é o SHAMT !!!
-            ShiftType = 3'b001;
-            ALUControl = ALUSFT;
+            // ALUSrcA = 2'd1;
+            // ALUSrcB  = 3'b000;
+            // SLLSourceA = 2'b10; //Entrada A é o B !!!
+            // SLLSourceB = 2'b10; //Entrada B é o SHAMT !!!
+            ShiftControl = 3'b001;
+            // ALUControl = ALUSFT;
         end
-        else if(estado == LOADSHFTV)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b00; //Entrada A é o A !!!
-            SLLSourceB = 2'b00; //Entrada B é o B !!!
-            ShiftType = 3'b001;
-            ALUControl = ALUSFT;
-        end
-        else if(estado == SLLV)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b00;
-            SLLSourceB = 2'b00; //
-            ShiftType = 3'b010;
-            ALUControl = ALUSFT;
-        end
-        else if(estado == SRAV)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b00;
-            SLLSourceB = 2'b00;
-            ShiftType = 3'b100;
-            ALUControl = ALUSFT;
-        end
+        // else if(estado == LOADSHFTV)
+        // begin
+        //     // ALUSrcA = 2'd1;
+        //     // ALUSrcB  = 3'b000;
+        //     // SLLSourceA = 2'b00; //Entrada A é o A !!!
+        //     // SLLSourceB = 2'b00; //Entrada B é o B !!!
+        //     ShiftControl = 3'b001;
+        //     // ALUControl = ALUSFT;
+        // end
+        // else if(estado == SLLV)
+        // begin
+        //     // ALUSrcA = 2'd1;
+        //     // ALUSrcB  = 3'b000;
+        //     // SLLSourceA = 2'b00;
+        //     // SLLSourceB = 2'b00; //
+        //     ShiftControl = 3'b010;
+        //     // ALUControl = ALUSFT;
+        // end
+        // else if(estado == SRAV)
+        // begin
+        //     ALUSrcA = 2'd1;
+        //     ALUSrcB  = 3'b000;
+        //     SLLSourceA = 2'b00;
+        //     SLLSourceB = 2'b00;
+        //     ShiftControl = 3'b100;
+        //     ALUControl = ALUSFT;
+        // end
         else if(estado == SRA)
         begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b10;
-            SLLSourceB = 2'b10;
-            ShiftType = 3'b100;
-            ALUControl = ALUSFT;
+            // ALUSrcA = 2'd1;
+            // ALUSrcB  = 3'b000;
+            // SLLSourceA = 2'b10;
+            // SLLSourceB = 2'b10;
+            ShiftControl = 3'b100;
+            // ALUControl = ALUSFT;
         end
-        else if(estado == SRL)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b10;
-            SLLSourceB = 2'b10;
-            ShiftType = 3'b011;
-            ALUControl = ALUSFT;
-        end
+        // else if(estado == SRL) //        TODO TESTBENCH
+        // begin
+        //     // ALUSrcA = 2'd1;
+        //     // ALUSrcB  = 3'b000;
+        //     // SLLSourceA = 2'b10;
+        //     // SLLSourceB = 2'b10;
+        //     ShiftControl = 3'b011;
+        //     // ALUControl = ALUSFT;
+        // end
         else if(estado == SLL)
         begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b10; //!!! Entrada é o B
-            SLLSourceB = 2'b10;
-            ShiftType = 3'b010;
-            ALUControl = ALUSFT;
+            // ALUSrcA = 2'd1;
+            // ALUSrcB  = 3'b000;
+            // SLLSourceA = 2'b10; //!!! Entrada é o B
+            // SLLSourceB = 2'b10;
+            ShiftControl = 3'b010;
+            // ALUControl = ALUSFT;
         end
         else if(estado == MFHI)
         begin
-            ALUControl = ALUMFHI;
+            RegWrite = 1'b0;
+            MemtoReg = 3'b000;
+            WriteSrc = 3'b000;
+            RegDest  = 3'b001;
         end
         else if(estado == MFLO)
         begin
-            ALUControl = ALUMFLO;
+            RegWrite = 1'b0;
+            MemtoReg = 3'b000;
+            WriteSrc = 3'b010;
+            RegDest  = 3'b001;
         end
         else if(estado == SAVEREGRD)
         begin
+            RegWrite = 1'b1; 
+            RegDest = 3'b001;
+            WriteSrc = 3'b001
             MemToReg = 3'b000;
-            RegDest = 2'b01;
-            RegWrite = 1'b1;
         end
-        else if(estado == BREAK)
-        begin
-            ALUSrcA = 2'd0;
-            ALUSrcB = 3'b001;
-            ALUControl = ALUSUB;
-        end
-        else if(estado == RTE)
-        begin
-            PCSource = 3'b100;
-            PCWrite = 1'b1;
-        end
+        // else if(estado == BREAK)
+        // begin
+        //     ALUSrcA = 2'd0;
+        //     ALUSrcB = 3'b001;
+        //     ALUControl = ALUSUB;
+        // end
+        // else if(estado == RTE)
+        // begin
+        //     PCSource = 3'b100;
+        //     PCWrite = 1'b1;
+        // end
         // else if(estado == LOADA)
         // begin
-        //     SrcAddr = 3'b100; // Lê da memória na posição de A
+        //     Exception = 3'b100; // Lê da memória na posição de A
         //     SizeHandler = 3'b100;
         // end
         // else if(estado == LOADB)
         // begin
         //     SizeHandler = 3'b111;
         //     SaveTemp = 1'b1;
-        //     SrcAddr = 3'b101;
+        //     Exception = 3'b101;
         //     // Lê a memória no posição B e salva o A em Temp
         // end
         // else if(estado == ATOB)
         // begin
         //     SizeHandler = 3'b111;
         //     DataSource = 1'b0;
-        //     SrcAddr = 3'b101;   // Salva A na pos de B
+        //     Exception = 3'b101;   // Salva A na pos de B
         //     MemWrite = 1'b1;
         // end
         // else if(estado == BTOA)
         // begin
         //     SizeHandler = 3'b111;
         //     DataSource = 1'b1;
-        //     SrcAddr = 3'b100;   // Salva B na pos de A
+        //     Exception = 3'b100;   // Salva B na pos de A
         //     MemWrite = 1'b1;
         // end
+
+
+
+
         // INSTRUIÇÕES I
         else if(estado == ADDI)
         begin
-            ALUSrcA = 2'd1;
+            ALUSrcA = 3'b001;
             ALUSrcB = 3'b010;
             ALUControl = ALUADD; //soma com overflow
         end
-        else if(estado == ADDIU)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b010;
-            ALUControl = ALUSADD;  // soma sem overflow
-        end
-        else if(estado == SLTI)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b010;
-            ALUControl = ALUCMP;
-        end
-        else if(estado == DIVM)
-        begin
-            ALUSrcA = 2'd2;
-            ALUSrcB = 3'b010;
-            ALUControl = ALUDIV;
-        end
+        // else if(estado == ADDIU)
+        // begin
+        //     ALUSrcA = 2'd1;
+        //     ALUSrcB = 3'b010;
+        //     ALUControl = ALUSADD;  // soma sem overflow
+        // end
+        // else if(estado == SLTI)
+        // begin
+        //     ALUSrcA = 2'd1;
+        //     ALUSrcB = 3'b010;
+        //     ALUControl = ALUCMP;
+        // end
+        // else if(estado == DIVM) // TODO
+        // begin
+        //     ALUSrcA = 2'd2;
+        //     ALUSrcB = 3'b010;
+        //     ALUControl = ALUDIV;
+        // end
         else  if(estado == LOADSLUI)
         begin
             ALUSrcA = 2'd1;
             ALUSrcB  = 3'b000;
             SLLSourceA = 2'b01; //!!! Entrada é o imediato
             SLLSourceB = 2'b01;
-            ShiftType = 3'b001;
+            ShiftControl = 3'b001;
             ALUControl = ALUSFT;
         end
         else if(estado == LUI)
         begin
             SLLSourceA = 2'b01; //!!! Entrada é o imediato
             SLLSourceB = 2'b01;
-            ShiftType = 3'b010;
+            ShiftControl = 3'b010;
             ALUControl = ALUSFT; //shift
         end
         else if(estado == SAVEREGRT)
         begin
-            MemToReg = 2'b00;
+            MemToReg = 3'b000;
             RegWrite = 1'b1;
             RegDest = 3'b000;
+            WriteSrc = 3'b001;
         end
         else if(estado == BRNCHCALC)
         begin
@@ -773,7 +768,7 @@ always @(posedge clk, reset) begin
         else if(estado == SW)
         begin
             IorD = 1'b1;
-            SrcAddr = 3'b000;
+            Exception = 3'b000;
             SizeHandler =3'b001;
             DataSource = 1'b1;
             MemWrite = 1'b1;
@@ -785,7 +780,7 @@ always @(posedge clk, reset) begin
         else if(estado == READMEM)
         begin
             IorD = 1'b1;
-            SrcAddr = 3'b000; //Lê da memória na pos calculada em MEMOCALC
+            Exception = 3'b000; //Lê da memória na pos calculada em MEMOCALC
 
             ALUSrcA = 2'd1;
             ALUSrcB = 3'b010;
@@ -799,7 +794,7 @@ always @(posedge clk, reset) begin
             RegWrite = 1'b1;
 
             IorD = 1'b1;
-            SrcAddr = 3'b000;
+            Exception = 3'b000;
         end
         // else if(estado == LH)
         // begin
@@ -809,7 +804,7 @@ always @(posedge clk, reset) begin
         //     RegWrite = 1'b1;
 
         //     IorD = 1'b1;
-        //     SrcAddr = 3'b000;
+        //     Exception = 3'b000;
         // end
         // else if(estado == LB)
         // begin
@@ -819,7 +814,7 @@ always @(posedge clk, reset) begin
         //     RegWrite = 1'b1;
 
         //     IorD = 1'b1;
-        //     SrcAddr = 3'b000;
+        //     Exception = 3'b000;
         // end
         // else if(estado == SH)
         // begin
@@ -828,7 +823,7 @@ always @(posedge clk, reset) begin
         //     MemWrite = 1'b1;
 
         //     IorD = 1'b1;
-        //     SrcAddr = 3'b000;
+        //     Exception = 3'b000;
         // end
         // else if(estado == SB)
         // begin
@@ -837,7 +832,7 @@ always @(posedge clk, reset) begin
         //     MemWrite = 1'b1;
 
         //     IorD = 1'b1;
-        //     SrcAddr = 3'b000;
+        //     Exception = 3'b000;
         // end
         // INSTRUÇÕES J
         else if(estado == JUMP)
@@ -862,10 +857,11 @@ always @(posedge clk, reset) begin
             // SizeHandler = 3'b110; //Exeption !!!
             PCSource = 3'b011;
             PCWrite = 1'b1;
+            ExceptionOcurred = 1'b1;
         end
         else if(estado == INVALIDOP)
         begin
-            SrcAddr = 3'b001;
+            Exception = 3'b001;
             // !!!
             MemToReg = 3'b000;
             RegDest = 3'b011;
@@ -880,7 +876,7 @@ always @(posedge clk, reset) begin
         end
         else if(estado == OVERFLOW)
         begin
-            SrcAddr = 3'b010;
+            Exception = 3'b010;
             MemToReg = 3'b000;
             RegDest = 3'b011;
             // SizeHandler = 3'b110; //Exeption !!!
@@ -893,7 +889,7 @@ always @(posedge clk, reset) begin
         end
         else if(estado == DIVBY0)
         begin
-            SrcAddr = 3'b011;
+            Exception = 3'b011;
             MemToReg = 3'b000;
             RegDest = 3'b011;
             // SizeHandler = 3'b110; //Exeption !!!
