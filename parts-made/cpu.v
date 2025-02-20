@@ -41,7 +41,7 @@ module cpu(
     wire            ExceptionOcurred; // todo: exception logic
 
     assign ABWrite = 1'b1;
-
+    assign ALUoutWrite = ABWrite;
 
 
 
