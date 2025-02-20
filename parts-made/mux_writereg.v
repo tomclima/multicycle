@@ -7,6 +7,7 @@ module mux_aluB(
 
 assign data_out = (selector == 4'b0000) ? data_0 : 
                   (selector == 4'b0001) ? data_1 : 
-                  (selector == 4'b0010) ? 32'd29 : 32'b0;  // Default case
+                  (selector == 4'b0010) ? 32'd29 : 
+                  (selector == 4'b0011) ? 32'd31 : 32'b0;  // Default case
 
 endmodule
