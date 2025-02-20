@@ -40,6 +40,8 @@ module cpu(
 
     wire            ExceptionOcurred; // todo: exception logic
 
+    assign ABWrite = 1'b1;
+
 
 
 
@@ -227,7 +229,7 @@ module cpu(
     Registrador A(
         clk,
         reset,
-        1,
+        ABWrite,
         ReadData1,
         Aout
     );
@@ -235,7 +237,7 @@ module cpu(
     Registrador B(
         clk,
         reset,
-        1,
+        ABWrite,
         ReadData2,
         Bout
     );
