@@ -11,7 +11,7 @@ module cpu(
     wire            MemRead;
     wire            IRWrite;
     wire            RegWrite;
-    wire            MemToReg;
+    wire    [3:0]   MemToReg;
     wire    [3:0]   RegDest;
     wire            AluSrcA;
     wire            EPCWrite;
