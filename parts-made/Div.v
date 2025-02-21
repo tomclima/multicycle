@@ -11,14 +11,14 @@ module Div(
     reg div_by_zero;
 
     always @(*) begin
-        if (b == 32'b0) begin
+        if (Divsrcb == 32'b0) begin
             div_by_zero = 1'b1;
             quotient = 32'b0;
-            rem = a; 
+            rem = Divsrca; 
         end else begin
             div_by_zero = 1'b0;
-            quotient = a / b;
-            rem = a % b;
+            quotient = Divsrca / Divsrcb;
+            rem = Divsrca % Divsrcb;
         end
     end
 

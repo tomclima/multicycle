@@ -42,7 +42,6 @@ module cpu(
 
     assign ABWrite = 1'b1;
     assign ALUoutWrite = ABWrite;
-    assign MemByte = MemRegout[7:0];
 
 
     // data wires
@@ -75,7 +74,7 @@ module cpu(
     wire    [31:0]      PCin;
     wire    [31:0]      PCSrcout;
     wire    [3:0]       PCjump;
-    assign  PCjump = PC[31:28];
+    assign  PCjump = PCout[31:28];
 
     wire    [31:0]      WriteSrcout;
     wire    [31:0]      Byteout;
@@ -97,6 +96,7 @@ module cpu(
     wire    [31:0]      MultHIout;
     wire    [31:0]      DivLOout;
     wire    [31:0]      MultLOout;
+    assign MemByte = MemRegout[7:0];
 
 
 
@@ -123,7 +123,7 @@ module cpu(
 
     // instruction register
     Instr_Reg ir_(
-        .clk(clk);
+        .clk(clk),
         .Reset(reset),
         .Load_ir(IRWrite),
         .Entrada(Memout),
@@ -268,11 +268,10 @@ module cpu(
     Registrador LO(
         clk,
         reset,
-        LOWrite
+        LOWrite,
         DivMultLOout, 
-        LOout;
-
-    )
+        LOout
+    );
 
     //multiplexers
 

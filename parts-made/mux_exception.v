@@ -7,7 +7,7 @@ module mul_exception (
 assign data_out = (selector == 4'b0000) ? ALUout : 
                   (selector == 4'b0001) ? 32'd253 : 
                   (selector == 4'b0010) ? 32'd254 : 
-                  (selector == 4'b0011) ? 32'255 : 32'b0;  // Default case
+                  (selector == 4'b0011) ? 32'd255 : 32'b0;  // Default case
 
 
 endmodule

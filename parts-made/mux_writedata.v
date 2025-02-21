@@ -2,7 +2,7 @@ module mux_writedata(
     input wire      [3:0]       selector,
     input wire      [31:0]      write_src_mux_out,
     input wire      [31:0]      mem_out,
-    input wire      [31:0]      mem_ext_out
+    input wire      [31:0]      mem_ext_out,
     output wire     [31:0]      data_out
 );
 
