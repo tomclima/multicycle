@@ -263,7 +263,7 @@ always @(posedge clk, reset) begin
             //         else STATE = INVALIDOP;
             //     end
             // end
-            else if(/*STATE == SLLV || STATE == SRAV || STATE == SRL */STATE == SRA || STATE == SLL) //todos os shift tipo R
+            else if(/*STATE == SLLV || STATE == SRAV || */ STATE == SRL STATE == SRA || STATE == SLL) //todos os shift tipo R
             begin
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;

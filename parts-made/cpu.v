@@ -144,6 +144,8 @@ module cpu(
         .Exception(Exception),
         .ShiftControl(ShiftControl),
         .ALUControl(ALUControl),
+        .ShiftSourceA(ShiftSourceA),
+        .ShiftSourceB(ShiftSourceB),
         .out_reset(control_reset)
     );
 
