@@ -6,6 +6,6 @@ module mux_ShiftB(
 );
 
 assign data_out = (selector == 4'b0000) ? Bout : 
-                  (selector == 4'b0001) ? {{16'b0} , OFFSET} : 32'b0;  // Default case
+                  (selector == 4'b0001) ? {{16'b0} , IMMEDIATE} : 32'b0;  // Default case
 
 endmodule
