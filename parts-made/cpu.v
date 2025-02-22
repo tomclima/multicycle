@@ -30,6 +30,8 @@ module cpu(
     wire    [2:0]   ShiftControl;
     wire            ABWrite;
     wire            ALUoutWrite;
+    wire    [3:0]   ShiftSourceA;
+    wire    [3:0]   ShiftSourceB;
     
         // ALU wires
     wire    [2:0]   ALUControl;
@@ -102,6 +104,8 @@ module cpu(
     wire    [31:0]      MultHIout;
     wire    [31:0]      DivLOout;
     wire    [31:0]      MultLOout;
+    wire    [4:0]       ShiftAout;
+    wire    [31:0]      ShiftBout;
     assign MemByte = MemRegout[7:0];
 
     // Control Unit
@@ -209,8 +213,8 @@ module cpu(
         clk,
         reset,
         ShiftControl,
-        SHAMT,
-        Bout,
+        ShiftAout,
+        ShiftBout,
         Shiftout
     );
 
@@ -398,6 +402,18 @@ module cpu(
         DivLOout,
         MultLOout,
         DivMultLOout
+    );
+
+    mux_ShiftA  m_ShiftA(
+        ShiftSourceA,
+        SHAMT,
+        ShiftAout
+    );
+    mux_ShiftB  m_shiftB(
+        ShiftSourceB,
+        Bout,
+        IMMEDIATE,
+        ShiftBout
     );
 
 

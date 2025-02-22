@@ -46,6 +46,8 @@ module control_unit(
     output reg     [3:0]        Exception,
     output reg     [2:0]        ShiftControl,
     output reg     [2:0]        ALUControl,
+    output reg     [3:0]        ShiftSourceA,
+    output reg     [3:0]        ShiftSourceB,
 
     // reset signal
     output reg                  out_reset
@@ -548,12 +550,11 @@ always @(posedge clk, reset) begin
         end
         else if(STATE == LOADSHFT)
         begin
-            // ALUSrcA = 2'd1;
-            // ALUSrcB  = 3'b000;
-            // SLLSourceA = 2'b10; //Entrada A é o B !!!
-            // SLLSourceB = 2'b10; //Entrada B é o SHAMT !!!
+            ALUSrcA = 2'd1;
+            ALUSrcB  = 3'b000;
+            SLLSourceA = 4'b0000; 
+            SLLSourceB = 4'b0000; //Entrada B é o SHAMT !!!
             ShiftControl = 3'b001;
-            // ALUControl = ALUSFT;
         end
         // else if(STATE == LOADSHFTV)
         // begin
@@ -584,30 +585,24 @@ always @(posedge clk, reset) begin
         // end
         else if(STATE == SRA)
         begin
-            // ALUSrcA = 2'd1;
-            // ALUSrcB  = 3'b000;
-            // SLLSourceA = 2'b10;
-            // SLLSourceB = 2'b10;
+            SLLSourceA = 4'b0000;
+            SLLSourceB = 4'b0000;
             ShiftControl = 3'b100;
-            // ALUControl = ALUSFT;
         end
-        // else if(STATE == SRL) //        TODO TESTBENCH
-        // begin
-        //     // ALUSrcA = 2'd1;
-        //     // ALUSrcB  = 3'b000;
-        //     // SLLSourceA = 2'b10;
-        //     // SLLSourceB = 2'b10;
-        //     ShiftControl = 3'b011;
+        else if(STATE == SRL) //        TODO TESTBENCH
+         begin
+            SLLSourceA = 2'b10;
+            SLLSourceB = 2'b10;
+        ShiftControl = 3'b011;
         //     // ALUControl = ALUSFT;
-        // end
+         end
         else if(STATE == SLL)
         begin
             // ALUSrcA = 2'd1;
             // ALUSrcB  = 3'b000;
-            // SLLSourceA = 2'b10; //!!! Entrada é o B
-            // SLLSourceB = 2'b10;
+            SLLSourceA = 4'b0000; //!!! Entrada é o B
+            SLLSourceB = 4'b0000;
             ShiftControl = 3'b010;
-            // ALUControl = ALUSFT;
         end
         else if(STATE == MFHI)
         begin
@@ -697,22 +692,18 @@ always @(posedge clk, reset) begin
         //     ALUControl = ALUDIV;
         // end
 
-       /*  else  if(STATE == LOADSLUI)          TODO
+        else  if(STATE == LOADSLUI)          
         begin
-            ALUSrcA = 2'd1;
-            ALUSrcB  = 3'b000;
-            SLLSourceA = 2'b01; //!!! Entrada é o imediato
-            SLLSourceB = 2'b01;
+            SLLSourceA = 4'b0000; //!!! Entrada é o imediato
+            SLLSourceB = 4'b0001;
             ShiftControl = 3'b001;
-            ALUControl = ALUSFT;
         end
-        else if(STATE == LUI)                   TODO
+        else if(STATE == LUI)                   
         begin
-            SLLSourceA = 2'b01; //!!! Entrada é o imediato
-            SLLSourceB = 2'b01;
+            SLLSourceA = 4'b0001; //!!! Entrada é o imediato
+            SLLSourceB = 4'b0000;
             ShiftControl = 3'b010;
-            ALUControl = ALUSFT; //shift
-        end */
+        end
         else if(STATE == SAVEREGRT)
         begin
             MemToReg = 3'b000;
