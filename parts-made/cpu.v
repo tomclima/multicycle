@@ -6,14 +6,16 @@ module cpu(
 
     //control wires
 
-    wire            PCwrite;
+    wire            control_reset;
+
+    wire            PCWrite;
     wire            MemWrite;
     wire            MemRead;
     wire            IRWrite;
     wire            RegWrite;
     wire    [3:0]   MemToReg;
     wire    [3:0]   RegDest;
-    wire            AluSrcA;
+    wire            ALUSrcA;
     wire            EPCWrite;
     wire            IorD;
     wire            HIWrite;
@@ -23,13 +25,13 @@ module cpu(
     wire            ByZero;   
     wire    [3:0]   WriteSrc;
     wire    [3:0]   PCSource;
-    wire    [3:0]   AluSrcB;
+    wire    [3:0]   ALUSrcB;
     wire    [3:0]   Exception;
     wire    [2:0]   ShiftControl;
     wire            ABWrite;
     wire            ALUoutWrite;
     
-        // alu wires
+        // ALU wires
     wire    [2:0]   ALUControl;
     wire            ALUoverflow;
     wire            Negative;
@@ -50,7 +52,7 @@ module cpu(
     wire    [4:0]       RT;
     wire    [4:0]       RD;
     wire    [15:0]      IMMEDIATE;
-    wire    [5:0]       SHAMT;
+    wire    [4:0]       SHAMT;
     wire    [5:0]       FUNCT;
     wire    [25:0]      OFFSET;
     assign  RD      = IMMEDIATE[15:11];
@@ -76,11 +78,14 @@ module cpu(
     wire    [3:0]       PCjump;
     assign  PCjump = PCout[31:28];
 
+
+    wire    [31:0]      Aout;
+    wire    [31:0]      Bout;
     wire    [31:0]      WriteSrcout;
     wire    [31:0]      Byteout;
     wire    [31:0]      Shiftout;
-    wire    [31:0]      ALUsrcAout;
-    wire    [31:0]      AluSrcBout;
+    wire    [31:0]      ALUSrcAout;
+    wire    [31:0]      ALUSrcBout;
     wire    [31:0]      SignExtout;
     wire    [31:0]      MemRegout;
     wire    [31:0]      EPCout;
@@ -90,6 +95,7 @@ module cpu(
     wire    [31:0]      JumpShiftLeftout;
     wire    [31:0]      ShiftLeftout;
     wire    [31:0]      HIout;
+    wire    [31:0]      LOout;
     wire    [31:0]      DivMultHIout;
     wire    [31:0]      DivMultLOout;
     wire    [31:0]      DivHIout;
@@ -98,14 +104,51 @@ module cpu(
     wire    [31:0]      MultLOout;
     assign MemByte = MemRegout[7:0];
 
+    // Control Unit
 
+    control_unit ControlUnit(
+        .clk(clk),
+        .reset(reset),
+        .ALUoverflow(ALUoverflow),
+        .Negativo(Negative),
+        .Zero(Zero),
+        .Igual(Equal),
+        .Maior(Greater),
+        .Menor(Less),
+        .Multoverflow(Multoverflow),
+        .DivByZero(ByZero),
+        .OPCODE(OPCODE),
+        .FUNCT(FUNCT),
+        .MemWrite(MemWrite),
+        .PCWrite(PCWrite),
+        .MemRead(MemRead),
+        .IRWrite(IRWrite),
+        .RegWrite(RegWrite),
+        .MemToReg(MemToReg),
+        .RegDest(RegDest),
+        .ALUSrcA(ALUSrcA),
+        .EPCWrite(EPCWrite),
+        .ALUSrcB(ALUSrcB),
+        .IorD(IorD),
+        .HIWrite(HIWrite),
+        .LOWrite(LOWrite),
+        .DivMult(DivMult),
+        .ALUoutWrite(ALUoutWrite),
+        .ExceptionOcurred(ExceptionOcurred),
+        .WriteSrc(WriteSrc),
+        .PCSource(PCSource),
+        .Exception(Exception),
+        .ShiftControl(ShiftControl),
+        .ALUControl(ALUControl),
+        .out_reset(control_reset)
+    );
 
 
     // PC
     Registrador PC_(
         .clk(clk),
         .Reset(reset),
-        .Load(PCwrite),
+        .Load(PCWrite),
         .Entrada(PCin), // MAKE PCin MUX
         .Saida(PCout)
     );
@@ -148,8 +191,8 @@ module cpu(
 
     // ALU                  
     Ula32   ALU(
-        ALUsrcAout,      
-        AluSrcBout,     
+        ALUSrcAout,      
+        ALUSrcBout,     
         ALUControl, 
         ALUResult,
         ALUoverflow,
@@ -198,18 +241,18 @@ module cpu(
     // Divisor
 
     Div Div(
-        AluSrcA,
-        AluSrcB,
+        ALUSrcAout,
+        ALUSrcBout,
         DivHIout,
-        DIvLOout,
+        DivLOout,
         ByZero
     );
 
     // Multiplicador
 
     Mult Mult(
-        AluSrcA,
-        AluSrcB,
+        ALUSrcAout,
+        ALUSrcBout,
         MultOverflow,
         MultHIout,
         MultLOout
@@ -290,19 +333,19 @@ module cpu(
         WriteReg
     );
 
-    mux_aluA    m_ALUsrcA(
-        AluSrcA,
+    mux_ALUA    m_ALUsrcA(
+        ALUSrcA,
         PCout,
         Aout,
-        ALUsrcAout
+        ALUSrcAout
     );
 
-    mux_aluB    m_ALUsrcB(
-        AluSrcB,
+    mux_ALUB    m_ALUsrcB(
+        ALUSrcB,
         Bout,
         SignExtout,        
         ShiftLeftout,        
-        AluSrcBout
+        ALUSrcBout
     );
 
     mux_IorD    m_IorD(
@@ -329,9 +372,10 @@ module cpu(
 
     mux_writesrc    m_writesrc(
         WriteSrc,
-        ALuout,
+        ALUout,
         HIout, 
         LOout, 
+        Shiftout,
         WriteSrcout
     );
 

@@ -1,4 +1,4 @@
-module mul_exception (
+module mux_exception (
     input   wire    [3:0]       selector,
     input   wire    [31:0]      ALUout,
     output  wire    [31:0]      out

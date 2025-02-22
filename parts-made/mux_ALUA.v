@@ -1,4 +1,4 @@
-module mux_aluA(
+module mux_ALUA(
     input   wire            selector,
     input   wire    [31:0]  data_0,
     input   wire    [31:0]  data_1,
