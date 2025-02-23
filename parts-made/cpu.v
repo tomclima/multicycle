@@ -6,8 +6,6 @@ module cpu(
 
     //control wires
 
-    wire            control_reset;
-
     wire            TempWrite;
     wire            PCWrite;
     wire            MemWrite;
@@ -148,7 +146,7 @@ module cpu(
         .ALUControl(ALUControl),
         .ShiftSourceA(ShiftSourceA),
         .ShiftSourceB(ShiftSourceB),
-        .out_reset(control_reset)
+        .out_reset(reset)
     );
 
 
