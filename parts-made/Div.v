@@ -1,30 +1,27 @@
 module Div(
-    input wire [31:0] Divsrca,            
-    input wire [31:0] Divsrcb,            
-    output wire [31:0] DivHI,   
-    output wire [31:0] DivLO,      
-    output wire by_zero             
+    input wire clk,
+    input wire [31:0] Divsrca,   // Dividend
+    input wire [31:0] Divsrcb,   // Divisor
+    input wire doDiv,            // Control signal to perform division
+    output reg [31:0] DivHI,     // Remainder
+    output reg [31:0] DivLO,     // Quotient
+    output reg by_zero           // Division by zero flag
 );
 
-    reg [31:0] quotient;
-    reg [31:0] rem;
-    reg div_by_zero;
-
-    always @(*) begin
-        if (b == 32'b0) begin
-            div_by_zero = 1'b1;
-            quotient = 32'b0;
-            rem = a; 
-        end else begin
-            div_by_zero = 1'b0;
-            quotient = a / b;
-            rem = a % b;
-        end
+always @(*) begin
+    if (doDiv == 1'b0) begin
+        DivLO = 32'b0;
+        DivHI = 32'b0;
+        by_zero = 1'b0;
+    end else if (Divsrcb == 32'b0) begin
+        by_zero = 1'b1;         // Set division by zero flag
+        DivLO = 32'b0;          // Undefined result, set to zero
+        DivHI = 32'b0;
+    end else begin
+        by_zero = 1'b0;         // No division by zero
+        DivLO = Divsrca / Divsrcb; // Quotient
+        DivHI = Divsrca % Divsrcb; // Remainder
     end
-
-
-    assign result = quotient;
-    assign remainder = rem;
-    assign by_zero = div_by_zero;
+end
 
 endmodule

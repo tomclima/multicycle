@@ -4,16 +4,19 @@ module cpu(
 );
 
 
-    //control wires
+    // wires
 
-    wire            PCwrite;
+    wire            doDiv;
+    wire            RTE;
+    wire            TempWrite;
+    wire            PCWrite;
     wire            MemWrite;
     wire            MemRead;
     wire            IRWrite;
     wire            RegWrite;
-    wire            MemToReg;
-    wire            RegDest;
-    wire            AluSrcA;
+    wire    [3:0]   MemToReg;
+    wire    [3:0]   RegDest;
+    wire    [3:0]   ALUSrcA;
     wire            EPCWrite;
     wire            IorD;
     wire            HIWrite;
@@ -23,13 +26,16 @@ module cpu(
     wire            ByZero;   
     wire    [3:0]   WriteSrc;
     wire    [3:0]   PCSource;
-    wire    [3:0]   AluSrcB;
+    wire    [3:0]   ALUSrcB;
     wire    [3:0]   Exception;
     wire    [2:0]   ShiftControl;
     wire            ABWrite;
     wire            ALUoutWrite;
-    
-        // alu wires
+    wire    [3:0]   ShiftSourceA;
+    wire    [3:0]   ShiftSourceB;
+    wire    [3:0]   MemWriteSrc;
+
+            // ALU wires
     wire    [2:0]   ALUControl;
     wire            ALUoverflow;
     wire            Negative;
@@ -40,7 +46,8 @@ module cpu(
 
     wire            ExceptionOcurred; // todo: exception logic
 
-
+    assign ABWrite = 1'b1;
+    
 
 
     // data wires
@@ -49,7 +56,7 @@ module cpu(
     wire    [4:0]       RT;
     wire    [4:0]       RD;
     wire    [15:0]      IMMEDIATE;
-    wire    [5:0]       SHAMT;
+    wire    [4:0]       SHAMT;
     wire    [5:0]       FUNCT;
     wire    [25:0]      OFFSET;
     assign  RD      = IMMEDIATE[15:11];
@@ -62,22 +69,29 @@ module cpu(
     wire    [31:0]      ReadData1;
     wire    [31:0]      ReadData2;
 
-
+    wire    [31:0]        SLTout;
     wire    [31:0]      ALUResult;
     wire    [31:0]      ALUout;
     wire    [31:0]      Memout;
+    wire    [7:0]       MemByte;
+    wire    [31:0]      MemExtOut;
 
+    wire    [31:0]      JALAddress;
     wire    [31:0]      PCout;
     wire    [31:0]      PCin;
     wire    [31:0]      PCSrcout;
     wire    [3:0]       PCjump;
-    assign  PCjump = PC[31:28];
+    assign  PCjump = PCout[31:28];
+    assign JALAddress = PCout + 4;
 
+    wire    [31:0]      RTEout;
+    wire    [31:0]      Aout;
+    wire    [31:0]      Bout;
     wire    [31:0]      WriteSrcout;
     wire    [31:0]      Byteout;
     wire    [31:0]      Shiftout;
-    wire    [31:0]      ALUsrcAout;
-    wire    [31:0]      AluSrcBout;
+    wire    [31:0]      ALUSrcAout;
+    wire    [31:0]      ALUSrcBout;
     wire    [31:0]      SignExtout;
     wire    [31:0]      MemRegout;
     wire    [31:0]      EPCout;
@@ -87,21 +101,68 @@ module cpu(
     wire    [31:0]      JumpShiftLeftout;
     wire    [31:0]      ShiftLeftout;
     wire    [31:0]      HIout;
+    wire    [31:0]      LOout;
     wire    [31:0]      DivMultHIout;
     wire    [31:0]      DivMultLOout;
     wire    [31:0]      DivHIout;
     wire    [31:0]      MultHIout;
     wire    [31:0]      DivLOout;
     wire    [31:0]      MultLOout;
+    wire    [4:0]       ShiftAout;
+    wire    [31:0]      ShiftBout;
+    wire    [31:0]      Tempout;
+    assign MemByte = MemRegout[7:0];
 
+    // Control Unit
 
+    control_unit ControlUnit(
+        .clk(clk),
+        .doDiv(doDiv),
+        .RTEsig(RTE),
+        .reset(reset),
+        .ALUoverflow(ALUoverflow),
+        .Negativo(Negative),
+        .Zero(Zero),
+        .Igual(Equal),
+        .Maior(Greater),
+        .Menor(Less),
+        .Multoverflow(Multoverflow),
+        .DivByZero(ByZero),
+        .OPCODE(OPCODE),
+        .FUNCT(FUNCT),
+        .MemWrite(MemWrite),
+        .PCWrite(PCWrite),
+        .MemRead(MemRead),
+        .IRWrite(IRWrite),
+        .RegWrite(RegWrite),
+        .MemToReg(MemToReg),
+        .RegDest(RegDest),
+        .ALUSrcA(ALUSrcA),
+        .EPCWrite(EPCWrite),
+        .ALUSrcB(ALUSrcB),
+        .IorD(IorD),
+        .HIWrite(HIWrite),
+        .LOWrite(LOWrite),
+        .DivMult(DivMult),
+        .ALUoutWrite(ALUoutWrite),
+        .ExceptionOcurred(ExceptionOcurred),
+        .WriteSrc(WriteSrc),
+        .PCSource(PCSource),
+        .Exception(Exception),
+        .ShiftControl(ShiftControl),
+        .ALUControl(ALUControl),
+        .ShiftSourceA(ShiftSourceA),
+        .ShiftSourceB(ShiftSourceB),
+        .out_reset(reset),
+        .TempWrite(TempWrite)
+    );
 
 
     // PC
     Registrador PC_(
         .clk(clk),
         .Reset(reset),
-        .Load(PCwrite),
+        .Load(PCWrite),
         .Entrada(PCin), // MAKE PCin MUX
         .Saida(PCout)
     );
@@ -112,14 +173,14 @@ module cpu(
         .Address(IorDout),
         .Clock(clk),
         .Wr(MemWrite),
-        .Datain(ALUout),
+        .Datain(Bout),
         .Dataout(Memout)
     );
 
 
     // instruction register
     Instr_Reg ir_(
-        .clk(clk);
+        .clk(clk),
         .Reset(reset),
         .Load_ir(IRWrite),
         .Entrada(Memout),
@@ -144,8 +205,8 @@ module cpu(
 
     // ALU                  
     Ula32   ALU(
-        ALUsrcAout,      
-        AluSrcBout,     
+        ALUSrcAout,      
+        ALUSrcBout,     
         ALUControl, 
         ALUResult,
         ALUoverflow,
@@ -162,16 +223,26 @@ module cpu(
         clk,
         reset,
         ShiftControl,
-        SHAMT,
-        Bout,
+        ShiftAout,
+        ShiftBout,
         Shiftout
     );
 
     // Sign Extend
 
-    sign_ext_16b SignExt(
+    sign_ext_16b SignExt16(
         IMMEDIATE, 
         SignExtout
+    );
+
+    sign_ext_24b SignExt24(
+        MemByte,
+        MemExtOut
+    );
+
+    sign_ext_31b SignExt31(
+        Less,
+        SLTout
     );
 
     // Shift lefts
@@ -189,24 +260,35 @@ module cpu(
     // Divisor
 
     Div Div(
-        AluSrcA,
-        AluSrcB,
+        clk,
+        ALUSrcAout,
+        ALUSrcBout,
+        doDiv,
         DivHIout,
-        DIvLOout,
+        DivLOout,
         ByZero
     );
 
     // Multiplicador
 
     Mult Mult(
-        AluSrcA,
-        AluSrcB,
+        ALUSrcAout,
+        ALUSrcBout,
         MultOverflow,
         MultHIout,
         MultLOout
     );
 
     //Registers in cpu
+
+
+    Registrador TempRegister(
+        clk,
+        reset,
+        TempWrite,
+        WriteSrcout,
+        Tempout
+    );
 
     Registrador MemDataRegister(
         clk,
@@ -227,7 +309,7 @@ module cpu(
     Registrador A(
         clk,
         reset,
-        1,
+        ABWrite,
         ReadData1,
         Aout
     );
@@ -235,7 +317,7 @@ module cpu(
     Registrador B(
         clk,
         reset,
-        1,
+        ABWrite,
         ReadData2,
         Bout
     );
@@ -259,18 +341,19 @@ module cpu(
     Registrador LO(
         clk,
         reset,
-        LOWrite
+        LOWrite,
         DivMultLOout, 
-        LOout;
-
-    )
+        LOout
+    );
 
     //multiplexers
 
     mux_writedata m_writedata(
         MemToReg,
-        WriteSrcout,  
-        MemRegout,       // semi desisti do byte
+        Tempout,  
+        MemRegout,       
+        MemExtOut,
+        JALAddress,
         WriteData
     );
 
@@ -281,19 +364,20 @@ module cpu(
         WriteReg
     );
 
-    mux_aluA    m_ALUsrcA(
-        AluSrcA,
+    mux_ALUA    m_ALUsrcA(
+        ALUSrcA,
         PCout,
         Aout,
-        ALUsrcAout
+        Bout,
+        ALUSrcAout
     );
 
-    mux_aluB    m_ALUsrcB(
-        AluSrcB,
+    mux_ALUB    m_ALUsrcB(
+        ALUSrcB,
         Bout,
         SignExtout,        
         ShiftLeftout,        
-        AluSrcBout
+        ALUSrcBout
     );
 
     mux_IorD    m_IorD(
@@ -302,6 +386,7 @@ module cpu(
         MemExcpout,       
         IorDout
     );
+
 
     mux_pcsource    m_PCSource(
         PCSource,
@@ -320,16 +405,25 @@ module cpu(
 
     mux_writesrc    m_writesrc(
         WriteSrc,
-        ALuout,
+        ALUout,
         HIout, 
         LOout, 
+        Shiftout,
+        SLTout,
         WriteSrcout
+    );
+
+    mux_rte     m_rte(
+        RTE,
+        PCSourceout,
+        EPCout,
+        RTEout
     );
 
     mux_pcerror m_pcexception(
         ExceptionOcurred,
-        PCSourceout,
-        EPCout,
+        MemExtOut,
+        RTEout, 
         PCin
     );
 
@@ -345,6 +439,19 @@ module cpu(
         DivLOout,
         MultLOout,
         DivMultLOout
+    );
+
+    mux_ShiftA  m_ShiftA(
+        ShiftSourceA,
+        SHAMT,
+        Aout,
+        ShiftAout
+    );
+    mux_ShiftB  m_shiftB(
+        ShiftSourceB,
+        Bout,
+        IMMEDIATE,
+        ShiftBout
     );
 
 

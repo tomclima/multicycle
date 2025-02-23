@@ -1,4 +1,4 @@
-module mux_aluB(
+module mux_ALUB(
     input wire      [3:0]       selector,
     input wire      [31:0]      Bout,
     input wire      [31:0]      SignExt,

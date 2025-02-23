@@ -8,7 +8,7 @@ module Mult(
 
     wire [63:0] product;
 
-    assign product = MultSrc1 * MultSrc2;
+    assign product = $signed(MultSrc1) * $signed(MultSrc2);
 
     assign MultLO = product[31:0];
 

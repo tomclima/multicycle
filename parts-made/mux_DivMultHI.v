@@ -5,6 +5,6 @@ module mux_DivMultHI(
     output  wire    [31:0]  data_out
 );
 
-    assign data_out = selector ? data_0, data_1;
+    assign data_out = selector ? data_0 : data_1;
 
 endmodule;

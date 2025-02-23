@@ -5,6 +5,6 @@ module mux_IorD(
     output  wire    [31:0]  data_out
 );
 
-    assign data_out = selector ? pc_out, mem_exc_mux_out;
+    assign data_out = selector ?  mem_exc_mux_out :  pc_out;
 
 endmodule;
