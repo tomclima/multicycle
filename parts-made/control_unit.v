@@ -21,6 +21,7 @@ module control_unit(
     
     //CONTROL SIGNALS
 
+    output reg                  RTEsig,
     output reg                  MemWrite,
     output reg                  PCWrite,
     output reg                  MemRead,
@@ -450,7 +451,8 @@ always @(posedge clk, reset) begin
 
 
         always @(STATE) begin
-
+        
+        RTEsig = 1'b0;
         MemWrite = 1'b0;
         PCWrite = 1'b0;
         MemRead = 1'b0;
@@ -661,11 +663,12 @@ always @(posedge clk, reset) begin
         //     ALUSrcB = 3'b001;
         //     ALUControl = ALUSUB;
         // end
-        // else if(STATE == RTE)
-        // begin
-        //     PCSource = 3'b100;
-        //     PCWrite = 1'b1;
-        // end
+        else if(STATE == RTE)
+        begin
+             RTEsig = 1'b1;
+             PCSource = 3'b100;
+             PCWrite = 1'b1;
+        end
         // else if(STATE == LOADA)
         // begin
         //     Exception = 3'b100; // Lê da memória na posição de A

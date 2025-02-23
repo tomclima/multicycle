@@ -6,6 +6,7 @@ module cpu(
 
     //control wires
 
+    wire            RTE;
     wire            TempWrite;
     wire            PCWrite;
     wire            MemWrite;
@@ -79,7 +80,7 @@ module cpu(
     wire    [3:0]       PCjump;
     assign  PCjump = PCout[31:28];
 
-
+    wire    [31:0]      RTEout;
     wire    [31:0]      Aout;
     wire    [31:0]      Bout;
     wire    [31:0]      WriteSrcout;
@@ -112,6 +113,7 @@ module cpu(
 
     control_unit ControlUnit(
         .clk(clk),
+        .RTEsig(RTE),
         .reset(reset),
         .ALUoverflow(ALUoverflow),
         .Negativo(Negative),
@@ -395,10 +397,17 @@ module cpu(
         WriteSrcout
     );
 
-    mux_pcerror m_pcexception(
-        ExceptionOcurred,
+    mux_rte     m_rte(
+        RTE,
         PCSourceout,
         EPCout,
+        RTEout
+    );
+
+    mux_pcerror m_pcexception(
+        ExceptionOcurred,
+        RTEout,
+        MemExtOut,
         PCin
     );
 
