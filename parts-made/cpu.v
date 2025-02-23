@@ -67,7 +67,7 @@ module cpu(
     wire    [31:0]      ReadData1;
     wire    [31:0]      ReadData2;
 
-
+    wire    [31:0]        SLTout;
     wire    [31:0]      ALUResult;
     wire    [31:0]      ALUout;
     wire    [31:0]      Memout;
@@ -235,6 +235,11 @@ module cpu(
         MemExtOut
     );
 
+    sign_ext_31b SignExt31(
+        Less,
+        SLTout
+    );
+
     // Shift lefts
     jump_Shiftleft2 JumpShiftLeft(
         OFFSET,
@@ -394,6 +399,7 @@ module cpu(
         HIout, 
         LOout, 
         Shiftout,
+        SLTout,
         WriteSrcout
     );
 

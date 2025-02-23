@@ -3,6 +3,6 @@ module sign_ext_16b(
     output      wire        [31:0]      data_out
 );
 
-    assign data_out = data_0[15] ? {{16'b1}, data_0} : {{16'b0}, data_0};
+    assign data_out = {{16{data_0[15]}}, data_0[15:0]};
 
 endmodule 

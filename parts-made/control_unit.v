@@ -246,11 +246,11 @@ always @(posedge clk, reset) begin
                 else STATE = INVALIDOP;
             end
             // INSTRUÇÕES R - TRANSIÇÕES
-            else if(STATE == SLT)     STATE = SAVEREGRD;//SAVELT;
-            else if(STATE == SUB)     STATE = SAVEREGRD;//SAVEALU;
-            else if(STATE == ADD)     STATE = SAVEREGRD;//SAVEALU;
-            else if(STATE == AND)     STATE = SAVEREGRD;//SAVEALU;
-            else if(STATE == OR)      STATE = SAVEREGRD;//SAVEOR;
+            else if(STATE == SLT || STATE == ADD || STATE == AND || STATE == SUB) begin
+                if(COUNTER == 0) COUNTER = 2;
+                COUNTER = COUNTER - 1;
+                if(COUNTER == 0) STATE = SAVEREGRD;
+            end
             else if(STATE == JR)      STATE = SAVEPC;
             else if(STATE == SAVEPC)  STATE = READINST;
             else if(STATE == SAVEPCBK)STATE = READINST;
@@ -286,7 +286,12 @@ always @(posedge clk, reset) begin
             end
             else if(STATE == MFHI)    STATE = SAVEREGRD;
             else if(STATE == MFLO)    STATE = SAVEREGRD;
-            else if(STATE == SAVEREGRD)STATE= READINST;
+            else if(STATE == SAVEREGRD) begin
+                if (COUNTER == 0) COUNTER = 2;
+                COUNTER = COUNTER -1; 
+                if(COUNTER == 0) STATE = READINST;
+            
+            end
             // else if(STATE == BREAK)   STATE = SAVEPCBK;
             //else if(STATE == RTE)     STATE = READINST;
             else if(STATE == DIV || STATE == MULT)
@@ -517,6 +522,8 @@ always @(posedge clk, reset) begin
         begin
             ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
+            WriteSrc = 4'b0100;
+            TempWrite = 1'b1;
             ALUControl = ALUCMP;  // S = X comp Y
         end
         else if(STATE == SUB)
@@ -524,6 +531,8 @@ always @(posedge clk, reset) begin
             ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             ALUControl = ALUSUB; // S = X - Y
+            WriteSrc = 4'b0000;
+            TempWrite = 1'b1;
         end
         else if(STATE == ADD)
         begin
@@ -538,6 +547,8 @@ always @(posedge clk, reset) begin
             ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             ALUControl = ALUAND;
+            WriteSrc = 4'b0000;
+            TempWrite = 1'b1;
         end
         // else if(STATE == OR)
         // begin
