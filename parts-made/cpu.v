@@ -172,7 +172,7 @@ module cpu(
         .Address(IorDout),
         .Clock(clk),
         .Wr(MemWrite),
-        .Datain(ALUout),
+        .Datain(IorDout),
         .Dataout(Memout)
     );
 
@@ -420,8 +420,8 @@ module cpu(
 
     mux_pcerror m_pcexception(
         ExceptionOcurred,
-        RTEout,
         MemExtOut,
+        RTEout, 
         PCin
     );
 
@@ -442,6 +442,7 @@ module cpu(
     mux_ShiftA  m_ShiftA(
         ShiftSourceA,
         SHAMT,
+        Aout,
         ShiftAout
     );
     mux_ShiftB  m_shiftB(

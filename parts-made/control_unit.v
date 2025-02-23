@@ -111,7 +111,7 @@ module control_unit(
     parameter SB         = 50;
     parameter JUMP       = 51;
     parameter JAL        = 52;
-    parameter EXEPTION   = 54;
+    parameter EXCEPTION   = 54;
     parameter INVALIDOP  = 55;
     parameter OVERFLOW   = 56;
     parameter DIVBY0     = 57;
@@ -412,29 +412,29 @@ always @(posedge clk, reset) begin
             //     if(COUNTER == 0) STATE = READINST;
             // end
             // TRATAMENTOS DE ERROS
-            else if(STATE == EXEPTION) // STATE = READINST;
+            else if(STATE == EXCEPTION) // STATE = READINST;
             begin
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0) STATE = READINST;
             end
-            else if(STATE == INVALIDOP) // STATE = EXEPTION;
+            else if(STATE == INVALIDOP) // STATE = EXCEPTION;
             begin
                 if(COUNTER == 0) COUNTER = 6;
                 COUNTER = COUNTER - 1;
-                if(COUNTER == 0) STATE = EXEPTION;
+                if(COUNTER == 0) STATE = EXCEPTION;
             end
-            else if(STATE == DIVBY0)   // STATE = EXEPTION;
+            else if(STATE == DIVBY0)   // STATE = EXCEPTION;
             begin
                 if(COUNTER == 0) COUNTER = 6;
                 COUNTER = COUNTER - 1;
-                if(COUNTER == 0) STATE = EXEPTION;
+                if(COUNTER == 0) STATE = EXCEPTION;
             end
             else if(STATE == OVERFLOW)
             begin
                 if(COUNTER == 0) COUNTER = 6;
                 COUNTER = COUNTER - 1;
-                if(COUNTER == 0) STATE = EXEPTION;
+                if(COUNTER == 0) STATE = EXCEPTION;
             end
         end
     end
@@ -905,56 +905,43 @@ always @(posedge clk, reset) begin
             RegWrite = 1'b1;
         end
         // TRATAMENTO DE ERROS
-        else if(STATE == EXEPTION)
+        else if(STATE == EXCEPTION)
         begin
-            MemToReg = 3'b000;
-            RegDest = 3'b011;
-            // SizeHandler = 3'b110; //Exeption !!!
-            PCSource = 3'b011;
-            PCWrite = 1'b1;
             ExceptionOcurred = 1'b1;
+            PCWrite = 1'b1;
+            
+            // SizeHandler = 3'b110; //EXCEPTION !!!
+            
         end
         else if(STATE == INVALIDOP)
         begin
-            Exception = 3'b001;
-            // !!!
-            MemToReg = 3'b000;
-            RegDest = 3'b011;
-            // SizeHandler = 3'b110; //Exeption !!!
-            PCSource = 3'b011;
-            // PCWrite = 1'b1;
-
-            EPCWrite = 1'b1;
-            ALUSrcA = 2'd0;
+            Exception = 4'b0001;
+            IorD = 1'b1;
+            MemRead = 1'b1;
+            ALUSrcA = 4'b0000;
             ALUSrcB = 4'b0001;
             ALUControl = ALUSUB;
+            EPCWrite = 1'b1;
         end
         else if(STATE == OVERFLOW)
         begin
-            Exception = 3'b010;
-            MemToReg = 3'b000;
-            RegDest = 3'b011;
-            // SizeHandler = 3'b110; //Exeption !!!
-            PCSource = 3'b011;
-            
-            EPCWrite = 1'b1;
-            ALUSrcA = 2'd0;
-            ALUSrcB = 3'b001;
+            Exception = 4'b0010;
+            IorD = 1'b1;
+            MemRead = 1'b1;
+            ALUSrcA = 4'b0000;
+            ALUSrcB = 4'b0001;
             ALUControl = ALUSUB;
+            EPCWrite = 1'b1;
         end
         else if(STATE == DIVBY0)
         begin
-            Exception = 3'b011;
-            MemToReg = 3'b000;
-            RegDest = 3'b011;
-            // SizeHandler = 3'b110; //Exeption !!!
-            PCSource = 3'b011;
-            // PCWrite = 1'b1;
-            
-            EPCWrite = 1'b1;
-            ALUSrcA = 2'd0;
-            ALUSrcB = 3'b001;
+            Exception = 4'b0011;
+            IorD = 1'b1;
+            MemRead = 1'b1;
+            ALUSrcA = 4'b0000;
+            ALUSrcB = 4'b0001;
             ALUControl = ALUSUB;
+            EPCWrite = 1'b1;
         end
 
     end
