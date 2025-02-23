@@ -131,6 +131,10 @@ module control_unit(
     parameter SLL_FUNCT     = 6'b000000;
     parameter SLT_FUNCT     = 6'b101010;
     parameter SRA_FUNCT     = 6'b000011;
+    parameter SRAV_FUNCT    = 6'b000111;
+    parameter SLLV_FUNCT    = 6'b000100;
+    parameter SRL_FUNCT     = 6'b000010;
+
     parameter SUB_FUNCT     = 6'b100010;
     parameter DIVM_FUNCT    = 6'b000101;
 
@@ -218,9 +222,9 @@ always @(posedge clk, reset) begin
                     else if(FUNCT == SRA_FUNCT) STATE = LOADSHFT;//SRA   0x3
                     else if(FUNCT == SLL_FUNCT) STATE = LOADSHFT;//SLL   0x0
                     else if(FUNCT == DIVM_FUNCT) STATE = DIVM;     //DIVM  0x1
-                    //else if(FUNCT == ) STATE = LOADSHFTV;//SRAV  0x7                  TESTBENCH
-                    //else if(FUNCT == ) STATE = LOADSHFTV;//SLLV  0x4                  TESTBENCH
-                    //else if(FUNCT == ) STATE = LOADSHFT;//SRL   0x2                   TESTBENCH
+                    else if(FUNCT == SRAV_FUNCT ) STATE = LOADSHFTV;//SRAV  0x7                  TESTBENCH
+                    else if(FUNCT == SLLV_FUNCT ) STATE = LOADSHFTV;//SLLV  0x4                  TESTBENCH
+                    else if(FUNCT == SRL_FUNCT) STATE = LOADSHFT;//SRL   0x2                   TESTBENCH
                     //else if(FUNCT == ) STATE = BREAK;   //break 0xd
                     //else if(FUNCT == ) STATE = RTE;     //rte   0x13
                     //else if(FUNCT == ) STATE = LOADA;   //xchg  0x5
@@ -268,19 +272,19 @@ always @(posedge clk, reset) begin
                     else STATE = INVALIDOP;
                 end
             end
-            // TESTBENCH
-            // else if(STATE == LOADSHFTV)
-            // begin
-            //     if(COUNTER == 0) COUNTER = 2;
-            //     COUNTER = COUNTER - 1;
-            //     if(COUNTER == 0)
-            //     begin
-            //              if(FUNCT == 6'b000100) STATE = SLLV;  //SLLV  0x4
-            //         else if(FUNCT == 6'b000111) STATE = SRAV;  //SRAV  0x7
-            //         else STATE = INVALIDOP;
-            //     end
-            // end
-            else if(/*STATE == SLLV || STATE == SRAV || */ STATE == SRL || STATE == SRA || STATE == SLL) //todos os shift tipo R
+            
+            else if(STATE == LOADSHFTV)
+            begin
+                if(COUNTER == 0) COUNTER = 2;
+                COUNTER = COUNTER - 1;
+                if(COUNTER == 0)
+                begin
+                    if(FUNCT == 6'b000100) STATE = SLLV;  //SLLV  0x4
+                    else if(FUNCT == 6'b000111) STATE = SRAV;  //SRAV  0x7
+                    else STATE = INVALIDOP;
+                    end
+                end
+            else if(STATE == SLLV || STATE == SRAV || STATE == SRL || STATE == SRA || STATE == SLL) //todos os shift tipo R
             begin
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;
@@ -603,55 +607,57 @@ always @(posedge clk, reset) begin
             ALUSrcB  = 3'b000;
             ShiftSourceA = 4'b0000; 
             ShiftSourceB = 4'b0000; //Entrada B é o SHAMT !!!
-            ShiftControl = 3'b001;
+            ShiftControl = SHIFTLOAD;
         end
-        // else if(STATE == LOADSHFTV)
-        // begin
-        //     // ALUSrcA = 2'd1;
-        //     // ALUSrcB  = 3'b000;
-        //     // ShiftSourceA = 2'b00; //Entrada A é o A !!!
-        //     // ShiftSourceB = 2'b00; //Entrada B é o B !!!
-        //     ShiftControl = 3'b001;
-        //     // ALUControl = ALUSFT;
-        // end
-        // else if(STATE == SLLV)
-        // begin
-        //     // ALUSrcA = 2'd1;
-        //     // ALUSrcB  = 3'b000;
-        //     // ShiftSourceA = 2'b00;
-        //     // ShiftSourceB = 2'b00; //
-        //     ShiftControl = 3'b010;
-        //     // ALUControl = ALUSFT;
-        // end
-        // else if(STATE == SRAV)
-        // begin
-        //     ALUSrcA = 2'd1;
-        //     ALUSrcB  = 3'b000;
-        //     ShiftSourceA = 2'b00;
-        //     ShiftSourceB = 2'b00;
-        //     ShiftControl = 3'b100;
-        //     ALUControl = ALUSFT;
-        // end
+        else if(STATE == LOADSHFTV)
+            begin
+                ShiftSourceA = 4'b0001; //Entrada A é o A !!!
+                ShiftSourceB = 2'b00; //Entrada B é o B !!!
+                ShiftControl = SHIFTLOAD;
+                
+        end
+        else if(STATE == SLLV)
+         begin
+            ShiftSourceA = 4'b0010;
+            ShiftSourceB = 4'b0000; //
+            ShiftControl = SHIFTLEFT;
+            WriteSrc = 4'b0011;
+            TempWrite = 1'b1;
+            // ALUControl = ALUSFT;
+        end
+        else if(STATE == SRAV)
+        begin
+            ShiftSourceA = 4'b0010;
+            ShiftControl = SHIFTRIGHTA;
+            WriteSrc = 4'b0011;
+            TempWrite = 1'b1;
+        end
         else if(STATE == SRA)
         begin
             ShiftSourceA = 4'b0000;
             ShiftSourceB = 4'b0000;
-            ShiftControl = 3'b100;
+            ShiftControl = SHIFTRIGHTA;
+            WriteSrc = 4'b0011;
+            TempWrite = 1'b1;
         end
         else if(STATE == SRL) //        TODO TESTBENCH
          begin
-            ShiftSourceA = 2'b10;
-            ShiftSourceB = 2'b10;
-        ShiftControl = 3'b011;
+            ShiftSourceA = 4'b0000;
+            ShiftSourceB = 4'b0000;
+            ShiftControl = SHIFTLEFTROT;
+            WriteSrc = 4'b0011;
+            TempWrite = 1'b1;
         //     // ALUControl = ALUSFT;
          end
         else if(STATE == SLL)
         begin
             // ALUSrcA = 2'd1;
             // ALUSrcB  = 3'b000;
-            ShiftSourceA = 4'b0000; //!!! Entrada é o B
+            ShiftSourceA = 4'b0000;
             ShiftSourceB = 4'b0000;
-            ShiftControl = 3'b010;
+            ShiftControl = SHIFTLEFT;
+            WriteSrc = 4'b0011;
+            TempWrite = 1'b1;
         end
         else if(STATE == MFHI)
         begin
@@ -909,7 +915,7 @@ always @(posedge clk, reset) begin
         begin
             ExceptionOcurred = 1'b1;
             PCWrite = 1'b1;
-            
+
             // SizeHandler = 3'b110; //EXCEPTION !!!
             
         end
