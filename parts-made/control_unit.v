@@ -37,6 +37,7 @@ module control_unit(
     
     output reg                  ALUoutWrite,
     output reg                  ExceptionOcurred,
+    output reg                  TempWrite,
 
     // CONTROL VECTORS
 
@@ -309,7 +310,11 @@ always @(posedge clk, reset) begin
             // else if(STATE == ATOB)    STATE = BTOA;
             // else if(STATE == BTOA)    STATE = READINST;
             // INSTRUÇÕES I - TRANSIÇÕES
-            else if(STATE == ADDI)    STATE = SAVEREGRT;
+            else if(STATE == ADDI) begin    
+                if(COUNTER == 0) COUNTER = 2;
+                COUNTER = COUNTER -1;
+                if(COUNTER == 0) STATE = SAVEREGRT;
+            end
             // else if(STATE == ADDIU)   STATE = SAVEREGRT;
             // else if(STATE == SLTI)    STATE = SAVEREGRT;
             else if(STATE == LOADSLUI)
@@ -458,13 +463,14 @@ always @(posedge clk, reset) begin
         HIWrite = 1'b0;
         LOWrite = 1'b0;
         DivMult = 1'b0;
+        TempWrite = 1'b0;
         
         ExceptionOcurred = 1'b0;
 
         MemToReg = 3'b000;
         WriteSrc = 3'b0;
         PCSource = 3'b0;
-        ALUSrcB = 3'b0;
+        ALUSrcB = 4'b0;
         Exception = 3'b0;
         ShiftControl = 2'b0;
         ALUControl = 2'b0;
@@ -520,8 +526,10 @@ always @(posedge clk, reset) begin
         else if(STATE == ADD)
         begin
             ALUSrcA = 4'b0001;
-            ALUSrcB = 3'b000;
+            ALUSrcB = 4'b0000;
             ALUControl = ALUADD; // soma COM OVERFLOW
+            WriteSrc = 4'b0000;
+            TempWrite = 1'b1;
         end
         else if(STATE == AND)
         begin
@@ -694,6 +702,7 @@ always @(posedge clk, reset) begin
             ALUSrcA = 4'b0001;
             ALUSrcB = 4'b0010;
             WriteSrc = 4'b0000;
+            TempWrite = 1'b1;
             ALUControl = ALUADD; //soma com overflow
         end
         // else if(STATE == ADDIU)
@@ -725,6 +734,8 @@ always @(posedge clk, reset) begin
             ShiftSourceA = 4'b0001; 
             ShiftControl = 3'b010;
             WriteSrc = 4'b0011;
+            TempWrite = 1'b1;
+            
         end
         else if(STATE == SAVEREGRT)
         begin

@@ -44,7 +44,7 @@ module cpu(
     wire            ExceptionOcurred; // todo: exception logic
 
     assign ABWrite = 1'b1;
-    assign TempWrite = ABWrite;
+    
 
 
     // data wires
@@ -146,7 +146,8 @@ module cpu(
         .ALUControl(ALUControl),
         .ShiftSourceA(ShiftSourceA),
         .ShiftSourceB(ShiftSourceB),
-        .out_reset(reset)
+        .out_reset(reset),
+        .TempWrite(TempWrite)
     );
 
 
