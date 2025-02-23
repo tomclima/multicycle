@@ -39,7 +39,7 @@ module control_unit(
     output reg                  ALUoutWrite,
     output reg                  ExceptionOcurred,
     output reg                  TempWrite,
-
+    output reg                  doDiv,
     // CONTROL VECTORS
 
     output reg     [3:0]        WriteSrc,
@@ -101,7 +101,7 @@ module control_unit(
     parameter BLE        = 41;
     parameter BGT        = 42;
     parameter CONDSAVEPC = 43;
-    parameter MEMOCALC   = 04;
+    parameter MEMOCALC   = 6;
     parameter SW         = 44;
     parameter READMEM    = 45;
     parameter LW         = 46;
@@ -115,6 +115,7 @@ module control_unit(
     parameter INVALIDOP  = 55;
     parameter OVERFLOW   = 56;
     parameter DIVBY0     = 57;
+    parameter SAVEHILO   = 58;
 
     // R instructions
     parameter R_OPCODE      = 6'b000000;
@@ -134,9 +135,6 @@ module control_unit(
     parameter DIVM_FUNCT    = 6'b000101;
 
 
-
-
-
     // I instructions
     parameter RESET_OPCODE  = 6'b111111;
     parameter ADDI_OPCODE   = 6'b001000;
@@ -149,6 +147,10 @@ module control_unit(
     parameter SB_OPCODE     = 6'b101000;
     parameter SW_OPCODE     = 6'b101011;
 
+
+    // J instructions
+    parameter JUMP_OPCODE = 6'b000010;
+    parameter JAL_OPCODE = 6'b000011;
 
     
     wire overflowflag;
@@ -241,12 +243,12 @@ always @(posedge clk, reset) begin
                 //else if(OPCODE == ) STATE = MEMOCALC; //LH    0x21
                 //else if(OPCODE == ) STATE = MEMOCALC; //SH    0x29
                 // INSTRUÇÕES J
-                //else if(OPCODE == 6'b000010) STATE = JUMP;     //J     0x2            TESTBENCH
-                //else if(OPCODE == 6'b000011) STATE = JAL;      //JAL   0x3            TESTBENCH
+                else if(OPCODE == JUMP_OPCODE) STATE = JUMP;     //J     0x2            TESTBENCH
+                else if(OPCODE == JAL_OPCODE) STATE = JAL;      //JAL   0x3            TESTBENCH
                 else STATE = INVALIDOP;
             end
             // INSTRUÇÕES R - TRANSIÇÕES
-            else if(STATE == SLT || STATE == ADD || STATE == AND || STATE == SUB) begin
+            else if(STATE == SLT || STATE == ADD || STATE == AND || STATE == SUB || STATE == MFHI || STATE == MFLO) begin
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0) STATE = SAVEREGRD;
@@ -284,22 +286,23 @@ always @(posedge clk, reset) begin
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0) STATE = SAVEREGRD;
             end
-            else if(STATE == MFHI)    STATE = SAVEREGRD;
-            else if(STATE == MFLO)    STATE = SAVEREGRD;
             else if(STATE == SAVEREGRD) begin
                 if (COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER -1; 
                 if(COUNTER == 0) STATE = READINST;
             
             end
+             else if(STATE == SAVEHILO) STATE = READINST;
+            
             // else if(STATE == BREAK)   STATE = SAVEPCBK;
             //else if(STATE == RTE)     STATE = READINST;
             else if(STATE == DIV || STATE == MULT)
             begin
-                if(COUNTER == 0) COUNTER = 34; //espera 32 ciclos para completar a divisão/multiplicação
+                if(COUNTER == 0) COUNTER = 2; //espera 32 ciclos para completar a divisão/multiplicação
                 COUNTER = COUNTER - 1;
-                if(COUNTER == 0) STATE = READINST;
+                if(COUNTER == 0) STATE = SAVEHILO;
                 if(DivByZero)begin COUNTER = 0; STATE = DIVBY0; end
+                if(Multoverflow) begin COUNTER = 0; STATE = OVERFLOW; end
             end
             // else if(STATE == LOADA)   //xchg load a
             // begin
@@ -402,7 +405,7 @@ always @(posedge clk, reset) begin
             // else if(STATE == SH) STATE = READINST;
             // INSTRUÇÕES J - TRANSIÇÃO
             else if(STATE == JUMP) STATE = READINST;
-            // else if(STATE == JAL)  //STATE = READINST;             TESTBENCH
+            else if(STATE == JAL)  STATE = READINST;             
             // begin
             //     if(COUNTER == 0) COUNTER = 1;
             //     COUNTER = COUNTER - 1;
@@ -457,6 +460,7 @@ always @(posedge clk, reset) begin
 
         always @(STATE) begin
         
+        doDiv = 1'b0;
         RTEsig = 1'b0;
         MemWrite = 1'b0;
         PCWrite = 1'b0;
@@ -559,16 +563,17 @@ always @(posedge clk, reset) begin
         else if(STATE == DIV)
         begin
             ALUSrcA = 4'b0001;
-            ALUSrcB  = 3'b000;
+            ALUSrcB  = 4'b0000;
             DivMult = 1'b0;
             HIWrite = 1'b1;
             LOWrite = 1'b1;
+            doDiv = 1'b1;
 
         end
         else if(STATE == MULT)
         begin
             ALUSrcA = 4'b0001;
-            ALUSrcB  = 3'b000;
+            ALUSrcB  = 4'b0000;
             DivMult = 1'b1;
             HIWrite = 1'b1;
             LOWrite = 1'b1;
@@ -652,14 +657,14 @@ always @(posedge clk, reset) begin
         begin
             RegWrite = 1'b0;
             MemToReg = 3'b000;
-            WriteSrc = 3'b000;
+            WriteSrc = 4'b0001;
             RegDest  = 3'b001;
         end
         else if(STATE == MFLO)
         begin
             RegWrite = 1'b0;
             MemToReg = 3'b000;
-            WriteSrc = 3'b010;
+            WriteSrc = 4'b010;
             RegDest  = 3'b001;
         end
         else if(STATE == SAVEREGRD)
@@ -668,6 +673,11 @@ always @(posedge clk, reset) begin
             RegDest = 3'b001;
             MemToReg = 3'b000;
         end
+        else if(STATE == SAVEHILO) begin
+            HIWrite = 1'b1;
+            LOWrite = 1'b1;
+
+         end
         // else if(STATE == BREAK)
         // begin
         //     ALUSrcA = 2'd0;
@@ -882,15 +892,15 @@ always @(posedge clk, reset) begin
         // INSTRUÇÕES J
         else if(STATE == JUMP)
         begin
-            PCSource = 2'b00;
+            PCSource = 4'b0010;
             PCWrite = 1'b1;
         end
         else if(STATE == JAL)
         begin
-            PCSource = 2'b00;
+            PCSource = 4'b0010;
             PCWrite = 1'b1;
             RegDest = 3'b010;
-            MemToReg = 3'b100;
+            MemToReg = 4'b0011;
             // MemWrite = 1'b1;
             RegWrite = 1'b1;
         end

@@ -4,8 +4,9 @@ module cpu(
 );
 
 
-    //control wires
+    // wires
 
+    wire            doDiv;
     wire            RTE;
     wire            TempWrite;
     wire            PCWrite;
@@ -74,11 +75,13 @@ module cpu(
     wire    [7:0]       MemByte;
     wire    [31:0]      MemExtOut;
 
+    wire    [31:0]      JALAddress;
     wire    [31:0]      PCout;
     wire    [31:0]      PCin;
     wire    [31:0]      PCSrcout;
     wire    [3:0]       PCjump;
     assign  PCjump = PCout[31:28];
+    assign JALAddress = PCout + 4;
 
     wire    [31:0]      RTEout;
     wire    [31:0]      Aout;
@@ -113,6 +116,7 @@ module cpu(
 
     control_unit ControlUnit(
         .clk(clk),
+        .doDiv(doDiv),
         .RTEsig(RTE),
         .reset(reset),
         .ALUoverflow(ALUoverflow),
@@ -255,8 +259,10 @@ module cpu(
     // Divisor
 
     Div Div(
+        clk,
         ALUSrcAout,
         ALUSrcBout,
+        doDiv,
         DivHIout,
         DivLOout,
         ByZero
@@ -273,6 +279,7 @@ module cpu(
     );
 
     //Registers in cpu
+
 
     Registrador TempRegister(
         clk,
@@ -345,6 +352,7 @@ module cpu(
         Tempout,  
         MemRegout,       
         MemExtOut,
+        JALAddress,
         WriteData
     );
 
