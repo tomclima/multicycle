@@ -28,7 +28,7 @@ module control_unit(
     output reg                  RegWrite,
     output reg      [3:0]       MemToReg,
     output reg      [3:0]       RegDest,
-    output reg                  ALUSrcA,
+    output reg      [3:0]       ALUSrcA,
     output reg                  EPCWrite,
     output reg                  IorD,
     output reg                  HIWrite,
@@ -151,6 +151,7 @@ module control_unit(
     
     wire overflowflag;
     assign overflowflag = ALUoverflow || Multoverflow;
+    assign ALUoutWrite = 1'b1;
 
     integer COUNTER = 0;
     integer STATE = 0;
@@ -164,8 +165,17 @@ module control_unit(
 always @(posedge clk, reset) begin
         if( reset == 1'b1 ) 
         begin
-            STATE = 0; 
-            COUNTER = 0;
+            if(STATE == RESET) begin
+                STATE = 0; 
+                COUNTER = 0;
+                out_reset = 1'b0;
+            end
+            else begin
+                out_reset = 1'b0;
+                COUNTER = 0;
+                STATE = READINST;
+            end
+
         end
         else
         begin
@@ -174,12 +184,15 @@ always @(posedge clk, reset) begin
             begin
                 if(COUNTER == 0) COUNTER = 2;  //para esperar um ciclo ainda no reset, para gravar na memória
                 COUNTER = COUNTER - 1;
-                if(COUNTER == 0) STATE = READINST;
+                if(COUNTER == 0) begin
+                    out_reset = 1'b0;
+                    STATE = READINST;
+                end
             end
             else if(overflowflag)          STATE = OVERFLOW;
             else if(STATE == READINST) //STATE = PC_INC;
             begin 
-                if(COUNTER == 0) COUNTER = 2;
+                if(COUNTER == 0) COUNTER = 3;
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0)  STATE = PC_INC;
             end
@@ -263,7 +276,7 @@ always @(posedge clk, reset) begin
             //         else STATE = INVALIDOP;
             //     end
             // end
-            else if(/*STATE == SLLV || STATE == SRAV || */ STATE == SRL STATE == SRA || STATE == SLL) //todos os shift tipo R
+            else if(/*STATE == SLLV || STATE == SRAV || */ STATE == SRL || STATE == SRA || STATE == SLL) //todos os shift tipo R
             begin
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;
@@ -307,11 +320,16 @@ always @(posedge clk, reset) begin
             end
             else if(STATE == LUI)     //STATE = SAVEREGRT;
             begin
-                 if(COUNTER == 0) COUNTER = 2;
+                if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0) STATE = SAVEREGRT;
             end
-            else if(STATE == SAVEREGRT)STATE= READINST;
+            else if(STATE == SAVEREGRT) begin
+                if (COUNTER == 0) COUNTER = 2;
+                COUNTER = COUNTER -1; 
+                if(COUNTER == 0) STATE = READINST;
+            
+            end
             else if(STATE == DIVM)
             begin 
                 if(COUNTER == 0) COUNTER = 34;
@@ -433,15 +451,14 @@ always @(posedge clk, reset) begin
         MemRead = 1'b0;
         IRWrite = 1'b0;
         RegWrite = 1'b0;
-        RegDest = 1'b0;
-        ALUSrcA = 1'b0;
+        RegDest = 3'b000;
+        ALUSrcA = 4'b0000;
         EPCWrite = 1'b0;
         IorD = 1'b0;
         HIWrite = 1'b0;
         LOWrite = 1'b0;
         DivMult = 1'b0;
         
-        ALUoutWrite = 1'b0;
         ExceptionOcurred = 1'b0;
 
         MemToReg = 3'b000;
@@ -451,70 +468,76 @@ always @(posedge clk, reset) begin
         Exception = 3'b0;
         ShiftControl = 2'b0;
         ALUControl = 2'b0;
+        ShiftSourceA = 4'b0000;
+        ShiftSourceB = 4'b0000;
 
 
         if(STATE == RESET)
         begin
             RegDest  = 3'b011; // seleciona o $29
-            MemToReg = 3'b010; // seta o $29 como 227
+            MemToReg = 3'b011; // seta o $29 como 227
             RegWrite = 1'b1;   // escreve no banco
         end
         else if(STATE == READINST)
         begin
-            
             IorD    = 1'b0;    // seleciona o endereço do pc p/ o mux
             // Exception = 3'b000;
-            MemRead = 1'b1; // memória lê automaticamente
+            MemRead = 1'b1; // memória lê automaticamente 
+            ALUSrcA = 4'b0000;   
+            ALUSrcB = 4'b0001; 
+            ALUControl = ALUADD;
         end
         else if(STATE == PC_INC)
         begin
-            ALUSrcA = 2'd0;   
-            ALUSrcB = 3'b001; 
+            ALUSrcA = 4'b0000;   
+            ALUSrcB = 4'b0001; 
             ALUControl = ALUADD;
+            ExceptionOcurred = 1'b0;
+            PCSource = 4'b0000;
             PCWrite = 1'b1;
-            PCSource = 3'b000;
-            ExceptionOcurred    = 1'b0; 
+            IRWrite = 1'b1; 
         end
         else if(STATE == DECODE)
         begin
             IRWrite = 1'b1; 
+           // PCWrite = 1'b1;
             // PCWrite = 1'b1; // !!! Adicionado !!!
             // IRWrite = 1'b1; // !!! cuidado !!!
         end
         // INSTRUÇÕES R
         else if(STATE == SLT)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             ALUControl = ALUCMP;  // S = X comp Y
         end
         else if(STATE == SUB)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             ALUControl = ALUSUB; // S = X - Y
         end
         else if(STATE == ADD)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB = 3'b000;
             ALUControl = ALUADD; // soma COM OVERFLOW
         end
         else if(STATE == AND)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             ALUControl = ALUAND;
         end
         // else if(STATE == OR)
         // begin
-        //     ALUSrcA = 1'b1;
+        //     ALUSrcA = 4'b0001;
         //     ALUSrcB = 3'b000;
         //     ALUControl = ALUOR;
         // end
         else if(STATE == DIV)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             DivMult = 1'b0;
             HIWrite = 1'b1;
@@ -523,7 +546,7 @@ always @(posedge clk, reset) begin
         end
         else if(STATE == MULT)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             DivMult = 1'b1;
             HIWrite = 1'b1;
@@ -531,7 +554,7 @@ always @(posedge clk, reset) begin
         end
         else if(STATE == JR)
         begin
-            ALUSrcA = 1'b1;
+            ALUSrcA = 4'b0001;
             ALUSrcB  = 3'b000;
             ALUControl = ALULOAD;
             PCSource = 3'b001;
@@ -622,7 +645,6 @@ always @(posedge clk, reset) begin
         begin
             RegWrite = 1'b1; 
             RegDest = 3'b001;
-            WriteSrc = 3'b001;
             MemToReg = 3'b000;
         end
         // else if(STATE == BREAK)
@@ -669,8 +691,9 @@ always @(posedge clk, reset) begin
         // INSTRUIÇÕES I
         else if(STATE == ADDI)
         begin
-            ALUSrcA = 3'b001;
-            ALUSrcB = 3'b010;
+            ALUSrcA = 4'b0001;
+            ALUSrcB = 4'b0010;
+            WriteSrc = 4'b0000;
             ALUControl = ALUADD; //soma com overflow
         end
         // else if(STATE == ADDIU)
@@ -693,23 +716,21 @@ always @(posedge clk, reset) begin
         // end
 
         else  if(STATE == LOADSLUI)          
-        begin
-            ShiftSourceA = 4'b0000; //!!! Entrada é o imediato
+        begin 
             ShiftSourceB = 4'b0001;
             ShiftControl = 3'b001;
         end
         else if(STATE == LUI)                   
         begin
-            ShiftSourceA = 4'b0001; //!!! Entrada é o imediato
-            ShiftSourceB = 4'b0000;
+            ShiftSourceA = 4'b0001; 
             ShiftControl = 3'b010;
+            WriteSrc = 4'b0011;
         end
         else if(STATE == SAVEREGRT)
         begin
             MemToReg = 3'b000;
             RegWrite = 1'b1;
             RegDest = 3'b000;
-            WriteSrc = 3'b001;
         end
 
 /*         else if(STATE == BRNCHCALC)          TODO
@@ -870,7 +891,7 @@ always @(posedge clk, reset) begin
 
             EPCWrite = 1'b1;
             ALUSrcA = 2'd0;
-            ALUSrcB = 3'b001;
+            ALUSrcB = 4'b0001;
             ALUControl = ALUSUB;
         end
         else if(STATE == OVERFLOW)

@@ -8,6 +8,7 @@ module cpu(
 
     wire            control_reset;
 
+    wire            TempWrite;
     wire            PCWrite;
     wire            MemWrite;
     wire            MemRead;
@@ -15,7 +16,7 @@ module cpu(
     wire            RegWrite;
     wire    [3:0]   MemToReg;
     wire    [3:0]   RegDest;
-    wire            ALUSrcA;
+    wire    [3:0]   ALUSrcA;
     wire            EPCWrite;
     wire            IorD;
     wire            HIWrite;
@@ -45,7 +46,7 @@ module cpu(
     wire            ExceptionOcurred; // todo: exception logic
 
     assign ABWrite = 1'b1;
-    assign ALUoutWrite = ABWrite;
+    assign TempWrite = ABWrite;
 
 
     // data wires
@@ -106,6 +107,7 @@ module cpu(
     wire    [31:0]      MultLOout;
     wire    [4:0]       ShiftAout;
     wire    [31:0]      ShiftBout;
+    wire    [31:0]      Tempout;
     assign MemByte = MemRegout[7:0];
 
     // Control Unit
@@ -266,6 +268,14 @@ module cpu(
 
     //Registers in cpu
 
+    Registrador TempRegister(
+        clk,
+        reset,
+        TempWrite,
+        WriteSrcout,
+        Tempout
+    );
+
     Registrador MemDataRegister(
         clk,
         reset,
@@ -326,7 +336,7 @@ module cpu(
 
     mux_writedata m_writedata(
         MemToReg,
-        WriteSrcout,  
+        Tempout,  
         MemRegout,       
         MemExtOut,
         WriteData
@@ -343,6 +353,7 @@ module cpu(
         ALUSrcA,
         PCout,
         Aout,
+        Bout,
         ALUSrcAout
     );
 
