@@ -33,8 +33,9 @@ module cpu(
     wire            ALUoutWrite;
     wire    [3:0]   ShiftSourceA;
     wire    [3:0]   ShiftSourceB;
-    
-        // ALU wires
+    wire    [3:0]   MemWriteSrc;
+
+            // ALU wires
     wire    [2:0]   ALUControl;
     wire            ALUoverflow;
     wire            Negative;
@@ -172,7 +173,7 @@ module cpu(
         .Address(IorDout),
         .Clock(clk),
         .Wr(MemWrite),
-        .Datain(IorDout),
+        .Datain(Bout),
         .Dataout(Memout)
     );
 
@@ -385,6 +386,7 @@ module cpu(
         MemExcpout,       
         IorDout
     );
+
 
     mux_pcsource    m_PCSource(
         PCSource,

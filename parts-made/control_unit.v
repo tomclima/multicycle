@@ -198,7 +198,7 @@ always @(posedge clk, reset) begin
                 end
             end
             else if(overflowflag)          STATE = OVERFLOW;
-            else if(STATE == READINST) //STATE = PC_INC;
+            else if(STATE == READINST) 
             begin 
                 if(COUNTER == 0) COUNTER = 3;
                 COUNTER = COUNTER - 1;
@@ -225,10 +225,6 @@ always @(posedge clk, reset) begin
                     else if(FUNCT == SRAV_FUNCT ) STATE = LOADSHFTV;//SRAV  0x7                  TESTBENCH
                     else if(FUNCT == SLLV_FUNCT ) STATE = LOADSHFTV;//SLLV  0x4                  TESTBENCH
                     else if(FUNCT == SRL_FUNCT) STATE = LOADSHFT;//SRL   0x2                   TESTBENCH
-                    //else if(FUNCT == ) STATE = BREAK;   //break 0xd
-                    //else if(FUNCT == ) STATE = RTE;     //rte   0x13
-                    //else if(FUNCT == ) STATE = LOADA;   //xchg  0x5
-                    //else if(FUNCT == ) STATE = OR;      //or    0x25
                     else STATE = INVALIDOP;
                 end
                 // INSTRUÇÕES I
@@ -240,13 +236,6 @@ always @(posedge clk, reset) begin
                 else if(OPCODE == LB_OPCODE) STATE = MEMOCALC; //LB    0x20
                 else if(OPCODE == SW_OPCODE) STATE = MEMOCALC; //SW    0x2b
                 else if(OPCODE == SB_OPCODE) STATE = MEMOCALC; //SB    0x28
-                //else if(OPCODE == ) STATE = ADDIU;    //ADDIU 0x9
-                //else if(OPCODE == ) STATE = SLTI;     //SLTI  0xa
-                //else if(OPCODE == ) STATE = BRNCHCALC;//BLE   0x6
-                //else if(OPCODE == ) STATE = BRNCHCALC;//BGT   0x7
-                //else if(OPCODE == ) STATE = MEMOCALC; //LH    0x21
-                //else if(OPCODE == ) STATE = MEMOCALC; //SH    0x29
-                // INSTRUÇÕES J
                 else if(OPCODE == JUMP_OPCODE) STATE = JUMP;     //J     0x2            TESTBENCH
                 else if(OPCODE == JAL_OPCODE) STATE = JAL;      //JAL   0x3            TESTBENCH
                 else STATE = INVALIDOP;
@@ -268,7 +257,7 @@ always @(posedge clk, reset) begin
                 begin
                          if(FUNCT == SRA_FUNCT) STATE = SRA;   //SRA   0x3
                     else if(FUNCT == SLL_FUNCT) STATE = SLL;   //SLL   0x0
-                    //else if(FUNCT == ) STATE = SRL;   //SRL   0x2
+                    else if(FUNCT == SRL_FUNCT) STATE = SRL;   //SRL   0x2
                     else STATE = INVALIDOP;
                 end
             end
@@ -298,8 +287,7 @@ always @(posedge clk, reset) begin
             end
              else if(STATE == SAVEHILO) STATE = READINST;
             
-            // else if(STATE == BREAK)   STATE = SAVEPCBK;
-            //else if(STATE == RTE)     STATE = READINST;
+
             else if(STATE == DIV || STATE == MULT)
             begin
                 if(COUNTER == 0) COUNTER = 2; //espera 32 ciclos para completar a divisão/multiplicação
@@ -308,20 +296,7 @@ always @(posedge clk, reset) begin
                 if(DivByZero)begin COUNTER = 0; STATE = DIVBY0; end
                 if(Multoverflow) begin COUNTER = 0; STATE = OVERFLOW; end
             end
-            // else if(STATE == LOADA)   //xchg load a
-            // begin
-            //     if(COUNTER == 0) COUNTER = 2;
-            //     COUNTER = COUNTER - 1;
-            //     if(COUNTER == 0) STATE = LOADB;
-            // end
-            // else if(STATE == LOADB)  //xchg load b
-            // begin
-            //     if(COUNTER == 0) COUNTER = 2;
-            //     COUNTER = COUNTER - 1;
-            //     if(COUNTER == 0) STATE = ATOB;
-            // end
-            // else if(STATE == ATOB)    STATE = BTOA;
-            // else if(STATE == BTOA)    STATE = READINST;
+
             // INSTRUÇÕES I - TRANSIÇÕES
             else if(STATE == ADDI) begin    
                 if(COUNTER == 0) COUNTER = 2;
@@ -606,13 +581,13 @@ always @(posedge clk, reset) begin
             ALUSrcA = 2'd1;
             ALUSrcB  = 3'b000;
             ShiftSourceA = 4'b0000; 
-            ShiftSourceB = 4'b0000; //Entrada B é o SHAMT !!!
+            ShiftSourceB = 4'b0000; 
             ShiftControl = SHIFTLOAD;
         end
         else if(STATE == LOADSHFTV)
             begin
-                ShiftSourceA = 4'b0001; //Entrada A é o A !!!
-                ShiftSourceB = 2'b00; //Entrada B é o B !!!
+                ShiftSourceA = 4'b0001; 
+                ShiftSourceB = 2'b00; 
                 ShiftControl = SHIFTLOAD;
                 
         end
@@ -623,7 +598,7 @@ always @(posedge clk, reset) begin
             ShiftControl = SHIFTLEFT;
             WriteSrc = 4'b0011;
             TempWrite = 1'b1;
-            // ALUControl = ALUSFT;
+
         end
         else if(STATE == SRAV)
         begin
@@ -640,19 +615,18 @@ always @(posedge clk, reset) begin
             WriteSrc = 4'b0011;
             TempWrite = 1'b1;
         end
-        else if(STATE == SRL) //        TODO TESTBENCH
+        else if(STATE == SRL) 
          begin
             ShiftSourceA = 4'b0000;
             ShiftSourceB = 4'b0000;
             ShiftControl = SHIFTLEFTROT;
             WriteSrc = 4'b0011;
             TempWrite = 1'b1;
-        //     // ALUControl = ALUSFT;
+
          end
         else if(STATE == SLL)
         begin
-            // ALUSrcA = 2'd1;
-            // ALUSrcB  = 3'b000;
+
             ShiftSourceA = 4'b0000;
             ShiftSourceB = 4'b0000;
             ShiftControl = SHIFTLEFT;
@@ -684,46 +658,14 @@ always @(posedge clk, reset) begin
             LOWrite = 1'b1;
 
          end
-        // else if(STATE == BREAK)
-        // begin
-        //     ALUSrcA = 2'd0;
-        //     ALUSrcB = 3'b001;
-        //     ALUControl = ALUSUB;
-        // end
+
         else if(STATE == RTE)
         begin
              RTEsig = 1'b1;
              PCSource = 3'b100;
              PCWrite = 1'b1;
         end
-        // else if(STATE == LOADA)
-        // begin
-        //     Exception = 3'b100; // Lê da memória na posição de A
-        //     SizeHandler = 3'b100;
-        // end
-        // else if(STATE == LOADB)
-        // begin
-        //     SizeHandler = 3'b111;
-        //     SaveTemp = 1'b1;
-        //     Exception = 3'b101;
-        //     // Lê a memória no posição B e salva o A em Temp
-        // end
-        // else if(STATE == ATOB)
-        // begin
-        //     SizeHandler = 3'b111;
-        //     DataSource = 1'b0;
-        //     Exception = 3'b101;   // Salva A na pos de B
-        //     MemWrite = 1'b1;
-        // end
-        // else if(STATE == BTOA)
-        // begin
-        //     SizeHandler = 3'b111;
-        //     DataSource = 1'b1;
-        //     Exception = 3'b100;   // Salva B na pos de A
-        //     MemWrite = 1'b1;
-        // end
-
-
+  
 
 
         // INSTRUIÇÕES I
@@ -735,24 +677,6 @@ always @(posedge clk, reset) begin
             TempWrite = 1'b1;
             ALUControl = ALUADD; //soma com overflow
         end
-        // else if(STATE == ADDIU)
-        // begin
-        //     ALUSrcA = 2'd1;
-        //     ALUSrcB = 3'b010;
-        //     ALUControl = ALUSADD;  // soma sem overflow
-        // end
-        // else if(STATE == SLTI)
-        // begin
-        //     ALUSrcA = 2'd1;
-        //     ALUSrcB = 3'b010;
-        //     ALUControl = ALUCMP;
-        // end
-        // else if(STATE == DIVM) // TODO
-        // begin
-        //     ALUSrcA = 2'd2;
-        //     ALUSrcB = 3'b010;
-        //     ALUControl = ALUDIV;
-        // end
 
         else  if(STATE == LOADSLUI)          
         begin 
@@ -774,64 +698,18 @@ always @(posedge clk, reset) begin
             RegDest = 3'b000;
         end
 
-/*         else if(STATE == BRNCHCALC)          TODO
-        begin
-            ALUSrcA = 2'd0;   //seleciona o PC
-            ALUSrcB = 3'b011; //+4  // calcula o novo PC após o branch
-            ALUControl = ALUADD; // soma com overflow
-        end
-        else if(STATE == BEQ)                   TODO
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b000;
-            ALUControl = ALUCMP;
-            PCWrite = 1'b1;
-            COUNTER = 1;
-        end
-        else if(STATE == BNE)                   TODO
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b000;
-            ALUControl = ALUNE;   
-            PCWrite = 1'b1;
-            COUNTER = 1;
-        end 
-        else if(STATE == BLE)                   TODO 
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b000;
-            ALUControl = ALULE;
-            PCWrite = 1'b1;
-            COUNTER = 1;
-        end */
 
-        // else if(STATE == BGT)
-        // begin
-        //     ALUSrcA = 2'd1;
-        //     ALUSrcB = 3'b000;
-        //     ALUControl = ALUGT;
-        //     PCWriteCond = 1'b1;
-        //     COUNTER = 1;
-        // end
-        else if(STATE == CONDSAVEPC)
-        begin
-            ALUSrcA = 2'd1;
-            ALUSrcB = 3'b000;   //mantem a entrada
-            PCSource = 3'b010;
-            COUNTER = 0;
-        end
         else if(STATE == MEMOCALC)
         begin
             ALUSrcA = 2'd1;
             ALUSrcB = 3'b010;
-            ALUControl = ALUADD; // soma com overflow p/ saber pos da memória
+            ALUControl = ALUADD; // aluout informa o address 
         end
         else if(STATE == SW)
         begin
             IorD = 1'b1;
             Exception = 3'b000;
-           // SizeHandler =3'b001;
-           // DataSource = 1'b1;
+
             MemWrite = 1'b1;
 
             ALUSrcA = 2'd1;
@@ -850,51 +728,22 @@ always @(posedge clk, reset) begin
         else if(STATE == LW)
         begin
            //  SizeHandler = 3'b100;
-            MemToReg = 3'b001;
+            MemToReg = 4'b0001;
             RegDest = 1'b0;
             RegWrite = 1'b1;
 
             IorD = 1'b1;
-            Exception = 3'b000;
         end
-        // else if(STATE == LH)
-        // begin
-        //     SizeHandler = 3'b101;
-        //     MemToReg = 3'b001;
-        //     RegDest = 1'b0;
-        //     RegWrite = 1'b1;
+        else if(STATE == LB)
+        begin
+            MemToReg = 4'b0010;
+            RegDest = 1'b0;
+            RegWrite = 1'b1;
 
-        //     IorD = 1'b1;
-        //     Exception = 3'b000;
-        // end
-        // else if(STATE == LB)
-        // begin
-        //     // SizeHandler = 3'b011;
-        //     MemToReg = 3'b001;
-        //     RegDest = 1'b0;
-        //     RegWrite = 1'b1;
+            IorD = 1'b1;
+        end
+       
 
-        //     IorD = 1'b1;
-        //     Exception = 3'b000;
-        // end
-        // else if(STATE == SH)
-        // begin
-        //     // SizeHandler = 3'b010;
-        //     DataSource = 1'b1;
-        //     MemWrite = 1'b1;
-
-        //     IorD = 1'b1;
-        //     Exception = 3'b000;
-        // end
-        // else if(STATE == SB)
-        // begin
-        //     SizeHandler = 3'b000;
-        //     DataSource = 1'b1;
-        //     MemWrite = 1'b1;
-
-        //     IorD = 1'b1;
-        //     Exception = 3'b000;
-        // end
         // INSTRUÇÕES J
         else if(STATE == JUMP)
         begin
