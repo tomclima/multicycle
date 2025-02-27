@@ -187,10 +187,10 @@ always @(posedge clk, reset) begin
         end
         else
         begin
-            // TRANSIÇÃO ENTRE OS STATES
+            // TRANSIÃÃO ENTRE OS STATES
             if( STATE == RESET )
             begin
-                if(COUNTER == 0) COUNTER = 2;  //para esperar um ciclo ainda no reset, para gravar na memória
+                if(COUNTER == 0) COUNTER = 2;  //para esperar um ciclo ainda no reset, para gravar na memÃ³ria
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0) begin
                     out_reset = 1'b0;
@@ -207,7 +207,7 @@ always @(posedge clk, reset) begin
             else if(STATE == PC_INC)   STATE = DECODE;
             else if(STATE == DECODE)
             begin
-                //INSTRUÇÕES R
+                //INSTRUÃÃES R
                 if(OPCODE == 6'b000000)
                 begin
                          if(FUNCT == MFHI_FUNCT) STATE = MFHI;    //mfhi  0x10
@@ -227,7 +227,7 @@ always @(posedge clk, reset) begin
                     else if(FUNCT == SRL_FUNCT) STATE = LOADSHFT;//SRL   0x2                   TESTBENCH
                     else STATE = INVALIDOP;
                 end
-                // INSTRUÇÕES I
+                // INSTRUÃÃES I
                 else if(OPCODE == ADDI_OPCODE) STATE = ADDI;     //ADDI  0x8
                 else if(OPCODE == LUI_OPCODE) STATE = LOADSLUI; //LUI   0xf
                 else if(OPCODE == BEQ_OPCODE) STATE = BRNCHCALC;//BEQ   0x4
@@ -240,7 +240,7 @@ always @(posedge clk, reset) begin
                 else if(OPCODE == JAL_OPCODE) STATE = JAL;      //JAL   0x3            TESTBENCH
                 else STATE = INVALIDOP;
             end
-            // INSTRUÇÕES R - TRANSIÇÕES
+            // INSTRUÃÃES R - TRANSIÃÃES
             else if(STATE == SLT || STATE == ADD || STATE == AND || STATE == SUB || STATE == MFHI || STATE == MFLO) begin
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER - 1;
@@ -290,14 +290,14 @@ always @(posedge clk, reset) begin
 
             else if(STATE == DIV || STATE == MULT)
             begin
-                if(COUNTER == 0) COUNTER = 2; //espera 32 ciclos para completar a divisão/multiplicação
+                if(COUNTER == 0) COUNTER = 2; //espera 32 ciclos para completar a divisÃ£o/multiplicaÃ§Ã£o
                 COUNTER = COUNTER - 1;
                 if(COUNTER == 0) STATE = SAVEHILO;
                 if(DivByZero)begin COUNTER = 0; STATE = DIVBY0; end
                 if(Multoverflow) begin COUNTER = 0; STATE = OVERFLOW; end
             end
 
-            // INSTRUÇÕES I - TRANSIÇÕES
+            // INSTRUÃÃES I - TRANSIÃÃES
             else if(STATE == ADDI) begin    
                 if(COUNTER == 0) COUNTER = 2;
                 COUNTER = COUNTER -1;
@@ -382,7 +382,7 @@ always @(posedge clk, reset) begin
             else if(STATE == SB) STATE = READINST;
             else if(STATE == LB) STATE = READINST;
             // else if(STATE == SH) STATE = READINST;
-            // INSTRUÇÕES J - TRANSIÇÃO
+            // INSTRUÃÃES J - TRANSIÃÃO
             else if(STATE == JUMP) STATE = READINST;
             else if(STATE == JAL)  STATE = READINST;             
             // begin
@@ -476,9 +476,9 @@ always @(posedge clk, reset) begin
         end
         else if(STATE == READINST)
         begin
-            IorD    = 1'b0;    // seleciona o endereço do pc p/ o mux
+            IorD    = 1'b0;    // seleciona o endereÃ§o do pc p/ o mux
             // Exception = 3'b000;
-            MemRead = 1'b1; // memória lê automaticamente 
+            MemRead = 1'b1; // memÃ³ria lÃª automaticamente 
             ALUSrcA = 4'b0000;   
             ALUSrcB = 4'b0001; 
             ALUControl = ALUADD;
@@ -500,7 +500,7 @@ always @(posedge clk, reset) begin
             // PCWrite = 1'b1; // !!! Adicionado !!!
             // IRWrite = 1'b1; // !!! cuidado !!!
         end
-        // INSTRUÇÕES R
+        // INSTRUÃÃES R
         else if(STATE == SLT)
         begin
             ALUSrcA = 4'b0001;
@@ -668,7 +668,7 @@ always @(posedge clk, reset) begin
   
 
 
-        // INSTRUIÇÕES I
+        // INSTRUIÃÃES I
         else if(STATE == ADDI)
         begin
             ALUSrcA = 4'b0001;
@@ -719,7 +719,7 @@ always @(posedge clk, reset) begin
         else if(STATE == READMEM)
         begin
             IorD = 1'b1;
-            Exception = 3'b000; //Lê da memória na pos calculada em MEMOCALC
+            Exception = 3'b000; //LÃª da memÃ³ria na pos calculada em MEMOCALC
 
             ALUSrcA = 2'd1;
             ALUSrcB = 3'b010;
@@ -744,7 +744,7 @@ always @(posedge clk, reset) begin
         end
        
 
-        // INSTRUÇÕES J
+        // INSTRUÃÃES J
         else if(STATE == JUMP)
         begin
             PCSource = 4'b0010;
@@ -803,4 +803,3 @@ always @(posedge clk, reset) begin
 
 
 endmodule
-
