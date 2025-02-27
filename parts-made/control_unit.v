@@ -159,7 +159,8 @@ module control_unit(
     
     wire overflowflag;
     assign overflowflag = ALUoverflow || Multoverflow;
-    assign ALUoutWrite = 1'b1;
+
+  
 
     integer COUNTER = 0;
     integer STATE = 0;
@@ -454,6 +455,7 @@ always @(posedge clk, reset) begin
         LOWrite = 1'b0;
         DivMult = 1'b0;
         TempWrite = 1'b0;
+        ALUoutWrite = 1'b1;
         
         ExceptionOcurred = 1'b0;
 
@@ -479,8 +481,7 @@ always @(posedge clk, reset) begin
             IorD    = 1'b0;    // seleciona o endereço do pc p/ o mux
             // Exception = 3'b000;
             MemRead = 1'b1; // memória lê automaticamente 
-            ALUSrcA = 4'b0000;   
-            ALUSrcB = 4'b0001; 
+
             ALUControl = ALUADD;
         end
         else if(STATE == PC_INC)

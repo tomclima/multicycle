@@ -10,7 +10,7 @@ module mux_writedata(
 assign data_out = (selector == 4'b0000) ? write_src_mux_out : 
                   (selector == 4'b0001) ? mem_out: 
                   (selector == 4'b0010) ? mem_ext_out :  
-                  (selector == 4'b0011) ? jal_address : 
+                  (selector == 4'b0011) ? jal_address - 4 : 
                   (selector == 4'b0100) ? 32'd227 : 32'b0; // default
 
 endmodule
